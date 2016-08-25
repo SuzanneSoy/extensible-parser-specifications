@@ -16,7 +16,8 @@
  (expander-out eh-mixin)
  ~no-order
  ~post-check
- ~post-fail)
+ ~post-fail
+ ~nop)
 
 ;; ------------
 ;; eh-mixin — TODO: move to phc-toolkit once the PR #7 for reqprov in
@@ -25,7 +26,7 @@
 (define-expander-type eh-mixin)
 
 (define-for-syntax eh-post-accumulate (make-parameter #f))
-#;(define-for-syntax current-no-order-clause (make-parameter #f))
+(define-for-syntax clause-counter (make-parameter #f))
 
 (define-syntax define-eh-alternative-mixin
   (syntax-parser
@@ -49,28 +50,8 @@
      (apply append (stx-map inline-or #'rest))]
     [x (list #'x)]))
 
-#;(define-for-syntax (expand-no-order-clauses/tree x)
-    (cond
-      [(syntax? x) (datum->syntax x
-                                  (expand-no-order-clauses/tree (syntax-e x))
-                                  x
-                                  x)]))
-
-#;(define-for-syntax (expand-no-order-clauses stx)
-    (syntax-case stx (~or)
-      [(~or pat ...) (append-map expand-no-order-clauses
-                                 (syntax->list #'(pat ...)))]
-      [(exp . args)
-       (let ([slv (syntax-local-value #'exp (λ _ #f))])
-         (and slv (expander? slv) (eh-mixin-expander? slv)))
-       (let* ([slv (syntax-local-value #'exp (λ _ #f))]
-              [transformer (expander-transformer slv)])
-         (expand-no-order-clauses (transformer stx)))]
-      [pat (parameterize ([current-no-order-clause #`#,(gensym 'clause)])
-             (list (expand-all-eh-mixin-expanders #'pat)))]))
-
-;; TODO: ~no-order should also be a eh-mixin-expander, so that nested ~post-fail
-;; are caught 
+;; TODO: ~no-order should also be a eh-mixin-expander, so that when there are
+;; nested ~no-order, the ~post-fail is caught by the nearest ~no-order.
 (define-syntax ~no-order
   (pattern-expander
    (λ (stx)
@@ -79,16 +60,24 @@
         ((λ (x) (pretty-write (syntax->datum x)) (newline) x)
          (let ()
            (define acc '())
+           (define counter 0)
+           (define (increment-counter)
+             (begin0 counter
+                     (set! counter (add1 counter))))
            (define (add-to-acc p)
-             (set! acc (cons p #;(replace-context #'self p) acc)))
+             (set! acc (cons p acc)))
            (define alts
-             (parameterize ([eh-post-accumulate add-to-acc])
-               #;(expand-no-order-clauses #'(~or pat ...))
+             (parameterize ([eh-post-accumulate add-to-acc]
+                            [clause-counter increment-counter])
                (inline-or (expand-all-eh-mixin-expanders #'(~or pat ...)))))
            #`(~delimit-cut
               (~and (~seq (~or . #,alts) (... ...))
                     ~!
                     #,@acc))))]))))
+
+(define-syntax ~nop
+  (pattern-expander
+   (λ/syntax-case (_) () #'(~do))))
 
 (define-for-syntax (eh-post-accumulate! name p)
   (unless (eh-post-accumulate)
@@ -107,7 +96,7 @@
       [(_ post)
        (begin
          (eh-post-accumulate! '~post-check #'post)
-         #'(~do))])))
+         #'(~nop))])))
 
 (define-eh-mixin-expander ~post-fail
   (let ()
@@ -115,18 +104,14 @@
       (syntax-case stx ()
         [(_ message #:when condition)
          (begin
-           #;(unless (current-no-order-clause)
-               (raise-syntax-error
-                '~post-fail
-                "~post-fail cannot be used directly as an ellipsis-head pattern"))
-           (define/with-syntax clause-present (gensym 'clause))
+           (define/with-syntax clause-present
+             (string->symbol (format "clause~a" ((clause-counter)))))
            (eh-post-accumulate!
             '~post-fail
-            #`(~fail #:when (and (attribute (~bind [clause-present #t])
-                                            #;#,(current-no-order-clause))
+            #`(~fail #:when (and (attribute clause-present)
                                  condition)
                      message))
-           #'(~do))]
+           #'(~bind [clause-present #t]))]
         [(self #:when condition message)
          (parse #'(self message #:when condition))]))
     parse))

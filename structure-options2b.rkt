@@ -5,11 +5,13 @@
          generic-syntax-expanders
          phc-toolkit/untyped
          (for-syntax syntax/parse
+                     syntax/parse/experimental/template
                      racket/syntax
                      phc-toolkit/untyped
                      racket/list
                      generic-syntax-expanders
-                     racket/contract))
+                     racket/function
+                     racket/pretty))
 
 (provide ;define-splicing-syntax-class-with-eh-mixins
  ;define-syntax-class-with-eh-mixins
@@ -22,7 +24,10 @@
  ~optional/else
  ~global-or
  ~global-and
- ~global-counter)
+ ~global-counter
+ aggregate-global-or
+ aggregate-global-and
+ aggregate-global-counter)
 
 ;; ------------
 ;; eh-mixin — TODO: move to phc-toolkit once the PR #7 for reqprov in
@@ -41,7 +46,7 @@
       (apply (parameter-name) args))))
 
 (define-dynamic-accumulator-parameter eh-post-accumulate eh-post-accumulate!)
-(define-dynamic-accumulator-parameter eh-pre-declarations eh-pre-declare!)
+(define-dynamic-accumulator-parameter eh-post-group eh-post-group!)
 
 ;; ----
 
@@ -75,36 +80,42 @@
    (λ (stx)
      (syntax-case stx ()
        [(self pat ...)
-        (let ()
-          (define counter 0)
-          (define (increment-counter)
-            (begin0 counter
-                    (set! counter (add1 counter))))
-          (define post-acc '())
-          (define (add-to-post! v) (set! post-acc (cons v post-acc)))
-          ;; pre-acc gathers some bindings that have to be pre-declared
-          (define pre-acc (make-hash))
-          (define/contract (add-to-pre! s v) (-> symbol? any/c identifier?)
-            (define not-found (gensym))
-            (define ref (hash-ref pre-acc s #f))
-            (if ref
-                (car ref)
-                (let ([id (datum->syntax (syntax-local-introduce #'here) s)])
-                  (hash-set! pre-acc s (cons id v))
-                  id)))
-          ;(define-values (pre-acc add-to-pre) (make-mutable-accumulator))
-          (define alts
-            (parameterize ([eh-post-accumulate add-to-post!]
-                           [eh-pre-declarations add-to-pre!]
-                           [clause-counter increment-counter])
-              (inline-or (expand-all-eh-mixin-expanders #'(~or pat ...)))))
-          (define pre-acc-bindings (hash-map pre-acc
-                                             (λ (s bv) #`(define . #,bv))))
-          #`(~delimit-cut
-             (~and (~do #,@pre-acc-bindings)
-                   (~seq (~or . #,alts) (... ...))
-                   ~!
-                   #,@post-acc)))]))))
+        ((λ (x) #;(pretty-write (syntax->datum x)) x)
+         (let ()
+           (define counter 0)
+           (define (increment-counter)
+             (begin0 counter
+                     (set! counter (add1 counter))))
+           ;; post-acc gathers some a-patterns which will be added after the
+           ;; (~seq (~or ) ...)
+           (define post-acc '())
+           (define (add-to-post! v) (set! post-acc (cons v post-acc)))
+           ;; post-groups-acc gathers some attributes that have to be grouped
+           (define post-groups-acc '())
+           (define (add-to-post-groups! . v)
+             (set! post-groups-acc (cons v post-groups-acc)))
+           ;; expand EH alternatives:
+           (define alts
+             (parameterize ([eh-post-accumulate add-to-post!]
+                            [eh-post-group add-to-post-groups!]
+                            [clause-counter increment-counter])
+               (inline-or (expand-all-eh-mixin-expanders #'(~or pat ...)))))
+           (define post-group-bindings
+             (for/list ([group (group-by car post-groups-acc free-identifier=?)])
+               ;; each item in `group` is a four-element list:
+               ;; (list result-id aggregate-function attribute)
+               (define/with-syntax name (first (car group))
+                 #;(syntax-local-introduce
+                    (datum->syntax #'here
+                                   (first (car group)))))
+               (define/with-syntax f (second (car group)))
+               #`[name (f . #,(map (λ (i) #`(attribute #,(third i)))
+                                   group))]))
+           #`(~delimit-cut
+              (~and (~seq (~or . #,alts) (... ...))
+                    ~!
+                    (~bind #,@post-group-bindings)
+                    #,@post-acc))))]))))
 
 (define-syntax ~nop
   (pattern-expander
@@ -142,17 +153,40 @@
        [(self (mutex:id ...) pat ...)
         #'(???)]))))
 
-(define-syntax-rule (define-~global ~global-name init f)
-  (define-eh-mixin-expander ~global-name
-    (λ/syntax-case (_ name v pat) ()
-      (eh-pre-declare! '~bool-or (syntax-e #'name) init)
-      #`(~and (~do (define tmp name))
-              (~do (define name (#,f tmp v)))
-              pat))))
+(define-syntax/parse (define-~global global-name (~optional default) f)
+  (define use-default-v? (syntax-e #'default-v?))
+  (template
+   (define-eh-mixin-expander global-name
+     (syntax-parser
+       [(_ (?? (~or [name v] (~and name (~bind [v default])))
+               [name v])
+           . pat)
+        (define/with-syntax clause-value (get-new-clause!))
+        (eh-post-group! '~global-name
+                        #'name ;(syntax-e #'name)
+                        #'f
+                        #'clause-value)
+        ;; protect the values inside an immutable box, so that a #f can be
+        ;; distinguished from a failed match.
+        #'(~and (~bind [clause-value (box-immutable v)])
+                . pat)]))))
 
-(define-~global ~global-or #f (λ (acc v) (or acc v)))
-(define-~global ~global-and #t (λ (acc v) (and acc v)))
-(define-~global ~global-counter 0 add1)
+(define (aggregate-global-or . bs)
+  (ormap unbox ;; remove the layer of protection
+         (filter identity ;; remove failed bindings
+                 (flatten bs)))) ;; don't care about ellipsis nesting
+(define-~global ~global-or #'#t aggregate-global-or)
+
+(define (aggregate-global-and . bs)
+  (andmap unbox ;; remove the layer of protection
+          (filter identity ;; remove failed bindings
+                  (flatten bs)))) ;; don't care about ellipsis nesting
+(define-~global ~global-and aggregate-global-and)
+
+(define (aggregate-global-counter . bs)
+  (length (filter identity ;; remove failed bindings
+                  (flatten bs)))) ;; don't care about ellipsis nesting
+(define-~global ~global-counter #''occurrence aggregate-global-counter)
 
 (define-eh-mixin-expander ~optional/else
   (syntax-parser

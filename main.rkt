@@ -120,6 +120,11 @@
                     (~bind #,@post-group-bindings)
                     #,@post-acc))))]))))
 
+(define-syntax ~no-order
+  (pattern-expander
+   (λ/syntax-case (_ . rest) ()
+     #'({~seq-no-order . rest}))))
+
 (define-syntax ~nop
   (pattern-expander
    (λ/syntax-case (_) () #'(~do))))

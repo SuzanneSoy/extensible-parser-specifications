@@ -14,6 +14,7 @@ stable enough, it may be merged into [Alex Knauth's
 implementation](https://github.com/AlexKnauth/seq-no-order).
 
 The following pattern expanders for `syntax/parse` are defined:
+* ~seq-no-order
 * ~no-order
 * ~post-check
 * ~post-fail

@@ -18,14 +18,14 @@
 
 (define-eh-alternative-mixin structure-kw-instance-or-builder
   (pattern
-   (~optional (~and instance-or-builder
-                    (~or (~global-or instance #:instance)
-                         (~global-or builder #:builder)))
-              #:name "either #:instance or #:builder")))
+   {~optional {~and instance-or-builder
+                    {~or {~global-or instance #:instance}
+                         {~global-or builder #:builder}}}
+              #:name "either #:instance or #:builder"}))
 
 (define-eh-alternative-mixin structure-kw-predicate
-  (pattern (~optional (~seq #:? predicate:id)
-                      #:name "#:? predicate")))
+  (pattern {~optional {~seq #:? predicate:id}
+                      #:name "#:? predicate"}))
 
 (define-and-for-syntax no-values-err
   (~a "The #:instance keyword implies the use of [field value],"
@@ -41,21 +41,21 @@
 
 (define-eh-alternative-mixin structure-kw-fields
   (pattern
-   (~optional/else
-    (~or (~seq (~or-bug [field:id] field:id) …+
-               (~global-or builder)
-               (~post-fail no-values-err #:when (attribute instance)))
-         (~seq [field:id : type] …+
-               (~global-or builder)
-               (~post-fail no-values-err #:when (attribute instance)))
-         (~seq [field:id value:expr] …+
-               (~global-or instance)
-               (~post-fail values-err #:when (attribute builder)))
-         (~seq (~or-bug [field:id value:expr : type]
-                        [field:id : type value:expr])
+   {~optional/else
+    {~or {~seq {~or-bug [field:id] field:id} …+
+               {~global-or builder}
+               {~post-fail no-values-err #:when (attribute instance)}}
+         {~seq [field:id : type] …+
+               {~global-or builder}
+               {~post-fail no-values-err #:when (attribute instance)}}
+         {~seq [field:id value:expr] …+
+               {~global-or instance}
+               {~post-fail values-err #:when (attribute builder)}}
+         {~seq {~or-bug [field:id value:expr : type]
+                        [field:id : type value:expr]}
                …+
-               (~global-or instance)
-               (~post-fail values-err #:when (attribute builder))))
+               {~global-or instance}
+               {~post-fail values-err #:when (attribute builder)}}}
     #:defaults ([(field 1) (list)]
                 [(value 1) (list)]
                 [(type 1) (list)])
@@ -63,17 +63,17 @@
                                            (not (attribute instance)))
     #:name (~a "field or [field] or [field : type] for #:builder,"
                " [field value] or [field : type value]"
-               " or [field value : type] for #:instance"))))
+               " or [field value : type] for #:instance")}))
 
 (define-eh-alternative-mixin structure-kw-all
-  (pattern (~or (structure-kw-instance-or-builder-mixin)
-                (structure-kw-predicate-mixin)
-                (structure-kw-fields-mixin))))
+  (pattern {~or {structure-kw-instance-or-builder-mixin}
+                {structure-kw-predicate-mixin}
+                {structure-kw-fields-mixin}}))
 
 ;; ---------
 
 (define-splicing-syntax-class structure-kws
-  (pattern (~seq-no-order (structure-kw-all-mixin))))
+  (pattern {~seq-no-order {structure-kw-all-mixin}}))
 
 (check-equal? (syntax-parse #'(#:instance #:? p)
                 [(:structure-kws)

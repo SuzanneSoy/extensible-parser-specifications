@@ -1,7 +1,9 @@
 #lang info
 (define collection "extensible-parser-specifications")
 (define deps '("base"
-               "rackunit-lib"))
+               "rackunit-lib"
+               "phc-toolkit"
+               "generic-syntax-expanders"))
 (define build-deps '("scribble-lib" "racket-doc"))
 (define scribblings '(("scribblings/extensible-parser-specifications.scrbl" ())))
 (define pkg-desc "Description Here")

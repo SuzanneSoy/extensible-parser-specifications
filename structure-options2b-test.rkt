@@ -12,36 +12,45 @@
                      racket/format))
 
 (check-equal? (syntax-parse #'(1 "ab" #:kw "ab" 3 4 5)
-                [({~no-order {~once {~global-counter cnt 'occurrencea #:kw}}
-                             {~global-counter cnt 'occurrenceb :number}
+                [({~no-order {~once {~global-counter [cnt 'occurrencea] #:kw}}
+                             {~global-counter [cnt 'occurrenceb] :number}
                              "ab"})
                  (attribute cnt)])
               5)
 
 (check-equal? (syntax-parse #'(1 "ab" #:kw "ab" 3 4 5)
-                [({~no-order {~once {~global-or kw-or-number #t #:kw}}
-                             {~global-or kw-or-number #t :number}
+                [({~no-order {~once {~global-or kw-or-number #:kw}}
+                             {~global-or kw-or-number :number}
                              "ab"})
                  (attribute kw-or-number)])
               #t)
 
 (check-equal? (syntax-parse #'(1 "ab" "ab" 3 4 5)
-                [({~no-order {~optional {~global-or kw #t #:kw}}
-                             {~global-or kw #f :number}
+                [({~no-order {~optional {~global-or [kw #t] #:kw}}
+                             {~global-or [kw #f] :number}
                              "ab"})
                  (attribute kw)])
               #f)
 
 (check-equal? (syntax-parse #'(1 "ab" #:kw "ab" 3 4 5)
-                [({~no-order {~optional {~global-and kw-and-not-number #t #:kw}}
-                             {~global-and kw-and-not-number #f :number}
+                [({~no-order {~optional {~global-and [kw-not-number #t] #:kw}}
+                             {~global-and [kw-not-number #f] :number}
                              "ab"})
-                 (attribute kw-and-not-number)])
+                 (attribute kw-not-number)])
               #f)
 
+(check-equal? (syntax-parse #'("ab" "ab")
+                [({~no-order {~optional {~global-and [kw-not-number #t] #:kw}}
+                             {~global-and [kw-not-number #f] :number}
+                             "ab"})
+                 (attribute kw-not-number)])
+              ;; (and) of nothing is #t, but we provide a 'none value
+              ;; for this special case
+              'none)
+
 (check-equal? (syntax-parse #'("ab" #:kw "ab")
-                [({~no-order {~optional {~global-and kw-and-not-number #t #:kw}}
-                               {~global-and kw-and-not-number #f :number}
-                               "ab"})
-                 (attribute kw-and-not-number)])
+                [({~no-order {~optional {~global-and [kw-not-number #t] #:kw}}
+                             {~global-and [kw-not-number #f] :number}
+                             "ab"})
+                 (attribute kw-not-number)])
               #t)

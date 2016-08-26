@@ -179,8 +179,9 @@
 
 (define (aggregate-global-and . bs)
   (andmap unbox ;; remove the layer of protection
-          (filter identity ;; remove failed bindings
-                  (flatten bs)))) ;; don't care about ellipsis nesting
+          (cons (box-immutable 'none) ;; default value when no bindings matched
+                (filter identity ;; remove failed bindings
+                        (flatten bs))))) ;; don't care about ellipsis nesting
 (define-~global ~global-and aggregate-global-and)
 
 (define (aggregate-global-counter . bs)

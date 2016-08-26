@@ -7,5 +7,5 @@
 (define build-deps '("scribble-lib" "racket-doc"))
 (define scribblings '(("scribblings/extensible-parser-specifications.scrbl" ())))
 (define pkg-desc "Description Here")
-(define version "0.0")
-(define pkg-authors '(georges))
+(define version "0.1")
+(define pkg-authors '(|Georges Dupéron|))

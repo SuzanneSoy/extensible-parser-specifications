@@ -1,12 +1,12 @@
 #lang racket
 
-(require racket/require
+(require extensible-parser-specifications
+         racket/require
          syntax/parse
          (subtract-in syntax/stx phc-toolkit/untyped)
          rackunit
          racket/format
          phc-toolkit/untyped
-         "structure-options2b.rkt"
          (for-syntax syntax/parse
                      syntax/stx
                      racket/format))

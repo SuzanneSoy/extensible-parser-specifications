@@ -17,7 +17,7 @@
  ;define-syntax-class-with-eh-mixins
  define-eh-alternative-mixin
  (expander-out eh-mixin)
- ~no-order
+ ~seq-no-order
  ~post-check
  ~post-fail
  ~nop
@@ -42,7 +42,7 @@
       (unless (parameter-name)
         (raise-syntax-error name
                             (string-append (symbol->string name)
-                                           " used outside of ~no-order")))
+                                           " used outside of ~seq-no-order")))
       (apply (parameter-name) args))))
 
 (define-dynamic-accumulator-parameter eh-post-accumulate eh-post-accumulate!)
@@ -73,9 +73,10 @@
      (apply append (stx-map inline-or #'rest))]
     [x (list #'x)]))
 
-;; TODO: ~no-order should also be a eh-mixin-expander, so that when there are
-;; nested ~no-order, the ~post-fail is caught by the nearest ~no-order.
-(define-syntax ~no-order
+;; TODO: ~seq-no-order should also be a eh-mixin-expander, so that when there
+;; are nested ~seq-no-order, the ~post-fail is caught by the nearest
+;; ~seq-no-order.
+(define-syntax ~seq-no-order
   (pattern-expander
    (λ (stx)
      (syntax-case stx ()
@@ -101,7 +102,9 @@
                             [clause-counter increment-counter])
                (inline-or (expand-all-eh-mixin-expanders #'(~or pat ...)))))
            (define post-group-bindings
-             (for/list ([group (group-by car post-groups-acc free-identifier=?)])
+             (for/list ([group (group-by car
+                                         post-groups-acc
+                                         free-identifier=?)])
                ;; each item in `group` is a four-element list:
                ;; (list result-id aggregate-function attribute)
                (define/with-syntax name (first (car group))

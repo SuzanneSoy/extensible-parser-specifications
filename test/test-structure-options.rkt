@@ -73,7 +73,7 @@
 ;; ---------
 
 (define-splicing-syntax-class structure-kws
-  (pattern (~no-order (structure-kw-all-mixin))))
+  (pattern (~seq-no-order (structure-kw-all-mixin))))
 
 (check-equal? (syntax-parse #'(#:instance #:? p)
                 [(:structure-kws)

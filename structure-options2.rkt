@@ -6,11 +6,10 @@
          rackunit
          racket/format
          phc-toolkit/untyped
+         "structure-options2b.rkt"
          (for-syntax syntax/parse
                      syntax/stx
                      racket/format))
-
-(require "structure-options2b.rkt")
 
 (provide structure-kw-instance-or-builder-mixin
          structure-kw-predicate-mixin
@@ -41,39 +40,25 @@
 
 (define-eh-alternative-mixin structure-kw-fields
   (pattern
-   (~optional (~and
-               (~seq clause42 ...)
-               ;; can't use #f, because of the bug
-               ;; https://github.com/racket/racket/issues/1437
-               (~bind [clause42-match? 1])
-               (~or (~seq (~or-bug [field:id] field:id) …+
-                          (~post-fail no-values-err #:when (attribute instance)))
-                    (~seq [field:id : type] …+
-                          (~post-fail no-values-err #:when (attribute instance)))
-                    (~seq [field:id value:expr] …+
-                          (~post-fail values-err #:when (attribute builder)))
-                    (~seq (~or-bug [field:id value:expr : type]
-                                   [field:id : type value:expr])
-                          …+
-                          (~post-fail values-err #:when (attribute builder)))))
-              #:defaults ([(field 1) #'()]
-                          [(clause42 1) #'()]
-                          [clause42-match?
-                           (begin (syntax-parse #'dummy
-                                    [(~and dummy
-                                           (~post-check (~fail #:when
-                                                               (and (= (attribute clause42-match?) 0)
-                                                                    (and (not (attribute builder))
-                                                                         (not (attribute instance))))
-                                                               empty-err)))
-                                     #'()])
-                                  0)])
-              #;(~post-fail empty-err
-                            #:when (and (not (attribute builder))
-                                        (not (attribute instance))))
-              #:name (~a "field or [field] or [field : type] for #:builder,"
-                         " [field value] or [field : type value]"
-                         " or [field value : type] for #:instance"))))
+   (~optional/else
+    (~or (~seq (~or-bug [field:id] field:id) …+
+               (~post-fail no-values-err #:when (attribute instance)))
+         (~seq [field:id : type] …+
+               (~post-fail no-values-err #:when (attribute instance)))
+         (~seq [field:id value:expr] …+
+               (~post-fail values-err #:when (attribute builder)))
+         (~seq (~or-bug [field:id value:expr : type]
+                        [field:id : type value:expr])
+               …+
+               (~post-fail values-err #:when (attribute builder))))
+    #:defaults ([(field 1) (list)]
+                [(value 1) (list)]
+                [(type 1) (list)])
+    #:else-post-fail empty-err #:when (and (not (attribute builder))
+                                           (not (attribute instance)))
+    #:name (~a "field or [field] or [field : type] for #:builder,"
+               " [field value] or [field : type value]"
+               " or [field value : type] for #:instance"))))
 
 (define-eh-alternative-mixin structure-kw-all
   (pattern (~or (structure-kw-instance-or-builder-mixin)
@@ -85,16 +70,20 @@
 (define-splicing-syntax-class structure-kws
   (pattern (~no-order (structure-kw-all-mixin))))
 
-#|
 (check-equal? (syntax->datum
                (syntax-parse #'(#:instance #:? p)
-                 [(:structure-kws) #'(instance instance-or-builder predicate)]))
-              '(#:instance #:instance p))
+                 [(:structure-kws)
+                  #'(instance instance-or-builder
+                              predicate
+                              [field ...]
+                              [value ...])]))
+              '(#:instance #:instance p [] []))
 
 (check-equal? (syntax->datum
                (syntax-parse #'(#:builder)
-                 [(k:structure-kws) #'(k.builder k.instance-or-builder)]))
-              '(#:builder #:builder))
+                 [(k:structure-kws)
+                  #'(k.builder k.instance-or-builder [k.field ...])]))
+              '(#:builder #:builder []))
 
 (test-exn
  "Check that () is rejected, as it has neither #:instance nor #:builder"
@@ -110,7 +99,6 @@ builder-style field declarations"
  (λ ()
    (syntax-parse #'(#:instance [f1] [f2])
      [(:structure-kws) #'([field ...] instance)])))
-|#
 
 (check-equal? (syntax->datum
                (syntax-parse #'(#:builder #:? p [f1] [f2])
@@ -123,7 +111,7 @@ builder-style field declarations"
                '(#f [f1 f2]))
 
 ;; This one is appropriately rejected
-#;(check-exn #px"unexpected term"
-             (λ ()
-               (syntax-parse #'(#:instance #:a)
-                 [(:structure-kws) 'err])))
+(check-exn #px"unexpected term"
+           (λ ()
+             (syntax-parse #'(#:instance #:a)
+               [(:structure-kws) 'err])))

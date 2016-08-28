@@ -58,9 +58,8 @@
   (syntax-parser
     [(_ name ((~literal pattern) pat) ...)
      (let ()
-       (define/with-syntax mixin (format-id #'name "~a-mixin" #'name))
        (define-temp-ids "~a/clause" (pat ...))
-       #'(define-eh-mixin-expander mixin
+       #'(define-eh-mixin-expander name
            (λ (_)
              (quote-syntax (~or pat ...)))))]))
 

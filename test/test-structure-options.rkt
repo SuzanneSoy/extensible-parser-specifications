@@ -16,14 +16,14 @@
          structure-kw-fields-mixin
          structure-kw-all-mixin)
 
-(define-eh-alternative-mixin structure-kw-instance-or-builder
+(define-eh-alternative-mixin structure-kw-instance-or-builder-mixin
   (pattern
    {~optional {~and instance-or-builder
                     {~or {~global-or instance #:instance}
                          {~global-or builder #:builder}}}
               #:name "either #:instance or #:builder"}))
 
-(define-eh-alternative-mixin structure-kw-predicate
+(define-eh-alternative-mixin structure-kw-predicate-mixin
   (pattern {~optional {~seq #:? predicate:id}
                       #:name "#:? predicate"}))
 
@@ -39,22 +39,26 @@
   (~a "If no fields are specified, then either #:builder or #:instance"
       " must be present"))
 
-(define-eh-alternative-mixin structure-kw-fields
+(define-eh-alternative-mixin structure-kw-fields-mixin
   (pattern
    {~optional/else
     {~or {~seq {~or-bug [field:id] field:id} …+
                {~global-or builder}
+               {~global-or no-types}
                {~post-fail no-values-err #:when (attribute instance)}}
          {~seq [field:id : type] …+
                {~global-or builder}
+               {~global-or types}
                {~post-fail no-values-err #:when (attribute instance)}}
          {~seq [field:id value:expr] …+
                {~global-or instance}
+               {~global-or no-types}
                {~post-fail values-err #:when (attribute builder)}}
          {~seq {~or-bug [field:id value:expr : type]
                         [field:id : type value:expr]}
                …+
                {~global-or instance}
+               {~global-or types}
                {~post-fail values-err #:when (attribute builder)}}}
     #:defaults ([(field 1) (list)]
                 [(value 1) (list)]
@@ -65,7 +69,7 @@
                " [field value] or [field : type value]"
                " or [field value : type] for #:instance")}))
 
-(define-eh-alternative-mixin structure-kw-all
+(define-eh-alternative-mixin structure-kw-all-mixin
   (pattern {~or {structure-kw-instance-or-builder-mixin}
                 {structure-kw-predicate-mixin}
                 {structure-kw-fields-mixin}}))

@@ -3,12 +3,10 @@
 (require extensible-parser-specifications
          racket/require
          syntax/parse
-         (subtract-in syntax/stx phc-toolkit/untyped)
          rackunit
          racket/format
          phc-toolkit/untyped
          (for-syntax syntax/parse
-                     syntax/stx
                      racket/format))
 
 (provide structure-kw-instance-or-builder-mixin

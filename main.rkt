@@ -5,7 +5,8 @@
          "private/no-order.rkt"
          "private/post.rkt"
          "private/global.rkt"
-         "private/optional.rkt")
+         "private/optional.rkt"
+         (for-template "private/define-syntax+simple-api.rkt"))
 
 (provide #;define-splicing-syntax-class-with-eh-mixins
          #;define-syntax-class-with-eh-mixins
@@ -22,5 +23,6 @@
          ~global-counter
          aggregate-global-or
          aggregate-global-and
-         aggregate-global-counter)
-
+         aggregate-global-counter
+         (for-template define-syntax/parse+simple)
+         define/syntax-parse+simple)

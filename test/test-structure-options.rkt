@@ -14,7 +14,8 @@
 (provide structure-kw-instance-or-builder-mixin
          structure-kw-predicate-mixin
          structure-kw-fields-mixin
-         structure-kw-all-mixin)
+         structure-kw-all-mixin
+         structure-kws)
 
 (define-eh-alternative-mixin structure-kw-instance-or-builder-mixin
   (pattern

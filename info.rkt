@@ -2,7 +2,7 @@
 (define collection "extensible-parser-specifications")
 (define deps '("base"
                "rackunit-lib"
-               "https://github.com/jsmaniac/phc-toolkit.git"
+               "phc-toolkit"
                "generic-syntax-expanders"))
 (define build-deps '("scribble-lib" "racket-doc"))
 (define scribblings '(("scribblings/extensible-parser-specifications.scrbl" ())))

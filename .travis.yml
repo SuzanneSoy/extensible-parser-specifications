@@ -50,6 +50,7 @@ before_script:
 # packages without it getting stuck on a confirmation prompt.
 script:
  - raco test -x -p extensible-parser-specifications
+ - raco setup --check-pkg-deps --no-zo --no-launcher --no-install --no-post-install --no-docs --pkgs extensible-parser-specifications
 
 after_success:
  - raco setup --check-pkg-deps --pkgs extensible-parser-specifications

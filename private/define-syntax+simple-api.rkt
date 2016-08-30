@@ -16,17 +16,33 @@
                    phc-toolkit/untyped
                    (prefix-in syntax/parse: syntax/parse/private/residual-ct)))
 
-(define-simple-macro (define-syntax/parse+simple [name stxclass] . body)
+(define-simple-macro (define-syntax/parse+simple [name . args] . body)
   #:with name-forward (format-id #'name "~a-forward-attributes" #'name)
   #:with tmp-forward (format-id #'tmp "~a-forward-attributes" #'tmp)
   (begin
     (begin-for-syntax
-      (define/syntax-parse+simple [tmp stxclass] . body)
+      (define/syntax-parse+simple [tmp . args] . body)
       (define-syntax name-forward (make-rename-transformer #'tmp-forward)))
     (define-syntax name tmp)))
 
 (begin-for-syntax
-  (define-syntax define/syntax-parse+simple
+  (define-syntax (define/syntax-parse+simple stx)
+    (syntax-case stx ()
+      [(_ [name . args] . body)
+       (let ()
+         (define introducer (make-syntax-introducer))
+         (define/with-syntax args-stxclass
+           (introducer (datum->syntax #'args 'args-stxclass) 'add))
+         (define/with-syntax body-introduced
+           (introducer #'body 'add))
+         #'(begin
+             (define-syntax-class args-stxclass
+               #:auto-nested-attributes
+               (pattern args))
+             (define/syntax-parse+simple/stxclass [name args-stxclass]
+               . body-introduced)))]))
+  
+  (define-syntax define/syntax-parse+simple/stxclass
     (syntax-parser
       [(_ [name (~var cls (static syntax/parse:stxclass? "a syntax class"))]
           . body)
@@ -47,7 +63,7 @@
               (define (name stx2)
                 (syntax-parameterize ([stx (make-rename-transformer #'stx2)])
                   (syntax-parse stx2
-                    [(name colon-stxclass) . body])))
+                    [(name . colon-stxclass) . body])))
               (define (private-simple-api stx/arg attr-name/arg …)
                 (syntax-parameterize ([stx (make-rename-transformer #'stx/arg)])
                   (syntax-parse #'nothing

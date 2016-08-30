@@ -25,7 +25,7 @@ env:
     #- RACKET_VERSION=6.1.1
     #- RACKET_VERSION=6.2
     #- RACKET_VERSION=6.3
-    - RACKET_VERSION=6.4
+    #- RACKET_VERSION=6.4
     - RACKET_VERSION=6.5
     - RACKET_VERSION=6.6
     - RACKET_VERSION=HEAD
@@ -53,6 +53,5 @@ script:
  - raco setup --check-pkg-deps --no-zo --no-launcher --no-install --no-post-install --no-docs --pkgs extensible-parser-specifications
 
 after_success:
- - raco setup --check-pkg-deps --pkgs extensible-parser-specifications
  - raco pkg install --deps search-auto cover cover-coveralls
  - raco cover -b -f coveralls -d $TRAVIS_BUILD_DIR/coverage .

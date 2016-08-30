@@ -6,6 +6,7 @@
          "private/post.rkt"
          "private/global.rkt"
          "private/optional.rkt"
+         "private/mixin.rkt"
          (for-template "private/define-syntax+simple-api.rkt"))
 
 (provide #;define-splicing-syntax-class-with-eh-mixins
@@ -14,6 +15,7 @@
          (expander-out eh-mixin)
          ~seq-no-order
          ~no-order
+         ~mixin
          ~post-check
          ~post-fail
          ~nop

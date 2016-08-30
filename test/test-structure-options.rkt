@@ -73,10 +73,10 @@
                 {structure-kw-predicate-mixin}
                 {structure-kw-fields-mixin}}))
 
-;; ---------
-
 (define-splicing-syntax-class structure-kws
   (pattern {~seq-no-order {structure-kw-all-mixin}}))
+
+;; ---------
 
 (check-equal? (syntax-parse #'(#:instance #:? p)
                 [(:structure-kws)

@@ -63,7 +63,7 @@
               (define (name stx2)
                 (syntax-parameterize ([stx (make-rename-transformer #'stx2)])
                   (syntax-parse stx2
-                    [(name . colon-stxclass) . body])))
+                    [(_ . colon-stxclass) . body])))
               (define (private-simple-api stx/arg attr-name/arg …)
                 (syntax-parameterize ([stx (make-rename-transformer #'stx/arg)])
                   (syntax-parse #'nothing

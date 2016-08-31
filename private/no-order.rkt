@@ -22,11 +22,9 @@
 (define-syntax define-eh-alternative-mixin
   (syntax-parser
     [(_ name ((~literal pattern) pat) ...)
-     (let ()
-       (define-temp-ids "~a/clause" (pat ...))
-       #'(define-eh-mixin-expander name
-           (λ (_)
-             (quote-syntax (~or pat ...)))))]))
+     #'(define-eh-mixin-expander name
+         (λ (_)
+           (quote-syntax (~or pat ...))))]))
 
 (define-for-syntax (inline-or stx)
   (syntax-case stx ()

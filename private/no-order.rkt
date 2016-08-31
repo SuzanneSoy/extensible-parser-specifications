@@ -60,7 +60,8 @@
              (parameterize ([eh-post-accumulate add-to-post!]
                             [eh-post-group add-to-post-groups!]
                             [clause-counter increment-counter])
-               (inline-or (expand-all-eh-mixin-expanders #'(~or pat ...)))))
+               ;(inline-or
+               (expand-all-eh-mixin-expanders #'(~or pat ...))))
            (define post-group-bindings
              (for/list ([group (group-by car
                                          post-groups-acc
@@ -75,7 +76,7 @@
                #`[name (f . #,(map (λ (i) #`(attribute #,(third i)))
                                    group))]))
            #`(~delimit-cut
-              (~and (~seq (~or . #,alts) (... ...))
+              (~and (~seq #,alts (... ...)) ;;(~or . #,alts)
                     ~!
                     (~bind #,@post-group-bindings)
                     #,@post-acc))))]))))

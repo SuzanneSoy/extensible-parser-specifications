@@ -21,10 +21,16 @@
 
 (define-syntax define-eh-alternative-mixin
   (syntax-parser
-    [(_ name ((~literal pattern) pat) ...)
-     #'(define-eh-mixin-expander name
-         (λ (_)
-           (quote-syntax (~or pat ...))))]))
+    [(_ name (~maybe #:define-splicing-syntax-class splicing-name)
+        ((~literal pattern) pat) ...)
+     #`(begin
+         (define-eh-mixin-expander name
+           (λ (_)
+             (quote-syntax (~or pat ...))))
+         #,@(if (attribute splicing-name)
+                #'((define-splicing-syntax-class splicing-name
+                     (pattern {~seq-no-order {name}})))
+                #'()))]))
 
 (define-for-syntax (inline-or stx)
   (syntax-case stx ()
@@ -42,7 +48,7 @@
      (syntax-case stx ()
        [(self pat ...)
         ((λ (x) #;(pretty-write (syntax->datum x)) x)
-         (let ()
+         (with-disappeared-uses
            (define counter 0)
            (define (increment-counter)
              (begin0 counter

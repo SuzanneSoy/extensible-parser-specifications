@@ -1,5 +1,23 @@
 #lang racket/base
 
+;; TODO: it should be possible to specify a partial ordering and/or join the
+;; constraints for multiple occurrences of the same ~no-order clause. The goal
+;; is to be able to write a pattern for:
+;; (some-macro opts … name opts … field … opts …)
+;; where opts is a ~no-order, with some constraints like ~once, ~optional etc.
+;; I'd like to write something like:
+;; (some-macro (~no-order #:kw1
+;;                        (~seq #:kw2 opt2)
+;;                        name:id
+;;                        (~and fields
+;;                              (~seq field:id …)
+;;                              (~global-before name fields))))
+;; However, the current implementation uses "(~or no-order-clauses) …" which
+;; does not permit a clause to see previously matched clauses.
+;; Maybe save this for the unified parser and generator library (see on github
+;; the repo jsmaniac/phc-toolkit, more specifically the file
+;; scribblings/template.scrbl within).
+
 (require syntax/parse
          ;syntax/parse/experimental/eh
          generic-syntax-expanders

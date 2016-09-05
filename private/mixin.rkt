@@ -10,5 +10,6 @@
   (syntax-parser
     [(_ (~var mixin (static eh-mixin-expander? "an eh-mixin expander")))
      (with-disappeared-uses
-      (record-disappeared-uses #'mixin)
-      #'(mixin))]))
+      (begin
+        (record-disappeared-uses #'mixin)
+        #'(mixin)))]))

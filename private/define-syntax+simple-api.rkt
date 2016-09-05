@@ -32,18 +32,21 @@
 
 (begin-for-syntax
   (define-syntax (define/syntax-parse+simple stx)
-    (syntax-case stx ()
-      [(_ [name . args] . body)
+    (syntax-parse stx
+      [(_ (name:name-or-curry . args)
+          (~optional (~seq #:define-splicing-syntax-class define-class-name:id))
+          . body)
        (let ()
          (define introducer (make-syntax-introducer))
          (define/with-syntax args-stxclass
-           (introducer (datum->syntax #'args 'args-stxclass) 'add))
+           (or (attribute define-class-name)
+               (introducer (datum->syntax #'args 'args-stxclass) 'add)))
          (define/with-syntax body-introduced
            (introducer #'body 'add))
          #'(begin
-             (define-syntax-class args-stxclass
+             (define-splicing-syntax-class args-stxclass
                #:auto-nested-attributes
-               (pattern args))
+               (pattern (~seq . args)))
              (define/syntax-parse+simple/stxclass [name args-stxclass]
                . body-introduced)))]))
 
@@ -84,7 +87,7 @@
             (define (name stx2)
               (syntax-parameterize ([stx (make-rename-transformer #'stx2)])
                 (syntax-parse stx2
-                  [(_ . colon-stxclass) . body])))
+                  [(_ colon-stxclass) . body])))
             (define def-private-simple-api
               (syntax-parameterize ([stx (make-rename-transformer #'stx/arg)])
                 (syntax-parse #'nothing

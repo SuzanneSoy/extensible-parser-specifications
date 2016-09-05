@@ -47,8 +47,8 @@
    (λ (stx)
      (syntax-case stx ()
        [(self pat ...)
-        ((λ (x) #;(pretty-write (syntax->datum x)) x)
-         (with-disappeared-uses
+        (with-disappeared-uses
+         (let ()
            (define counter 0)
            (define (increment-counter)
              (begin0 counter

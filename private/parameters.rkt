@@ -7,7 +7,8 @@
                      eh-post-group
                      eh-post-group!
                      clause-counter
-                     get-new-clause!))
+                     get-new-clause!
+                     is-clause-id-sym?))
 
 (define-syntax-rule (define-dynamic-accumulator-parameter parameter-name name!)
   (begin
@@ -22,6 +23,13 @@
 (define-dynamic-accumulator-parameter eh-post-accumulate eh-post-accumulate!)
 (define-dynamic-accumulator-parameter eh-post-group eh-post-group!)
 
+;; This is a crude hack.
+(define-for-syntax (is-clause-id-sym? id-sym)
+  (and (symbol? id-sym)
+       (regexp-match #px"^ -clause-.* $" (symbol->string id-sym))))
+
 (define-for-syntax clause-counter (make-parameter #f))
 (define-for-syntax (get-new-clause!)
-  (string->symbol (format "clause~a" ((clause-counter)))))
+  (datum->syntax #'here
+                 ;; keep the spaces, they allow us to recognize clauses later.
+                 (string->symbol (format " -clause-~a " ((clause-counter))))))

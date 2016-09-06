@@ -18,6 +18,7 @@
          ~mixin
          ~post-check
          ~post-fail
+         ~whole
          ~nop
          ~optional/else
          ~global-or

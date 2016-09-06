@@ -61,50 +61,53 @@
           #`(#,(pat-name-or-curry (stx-car stx) new-name) . #,(gensym 'args))))
   
   (define-syntax define/syntax-parse+simple/stxclass
-    (syntax-parser
-      [(_ [name:name-or-curry
-           (~var cls (static syntax/parse:stxclass? "a syntax class"))]
-          . body)
-       #:with colon-stxclass (format-id #'cls ":~a" #'cls)
-       (with-arrows
-        (define/with-syntax name-forward
-          (format-id/record #'name.id "~a-forward-attributes" #'name.id))
-        (define c (syntax-local-value/record #'cls syntax/parse:stxclass?))
-        (define attrs (filter-not (λ (a) (is-clause-id-sym?
-                                          (syntax/parse:attr-name a)))
-                                  (syntax/parse:stxclass-attrs c)))
-        (define/with-syntax (attr-name …) (map syntax/parse:attr-name attrs))
-        (define/with-syntax (attr-name/ctx …)
-          (stx-map (λ (a) (datum->syntax #'body (syntax-e a)))
-                   #'(attr-name …)))
-        (define-temp-ids "~a/arg" (attr-name …))
-        (define/with-syntax (attr-depth …)
-          (map syntax/parse:attr-depth attrs))
-        (define/with-syntax def-private-simple-api
-          (change-name-or-curry #'name
-                                #'(private-simple-api stx/arg attr-name/arg …)))
-        #'(begin
-            (define (name stx2)
-              (syntax-parameterize ([stx (make-rename-transformer #'stx2)])
-                (syntax-parse stx2
-                  [(_ colon-stxclass) . body])))
-            (define def-private-simple-api
-              (syntax-parameterize ([stx (make-rename-transformer #'stx/arg)])
-                (syntax-parse #'nothing
-                  [(~bind [(attr-name/ctx attr-depth) attr-name/arg] …)
-                   . body])))
-            (define-syntax (name-forward stx3)
-              (syntax-case stx3 ()
-                [(_)
-                 #`(private-simple-api
-                    stx
-                    (attribute #,(datum->syntax stx3 'attr-name))
-                    …)]
-                [(_ forward-args-prefix)
-                 (identifier? #'forward-args-prefix)
-                 #`(private-simple-api
-                    stx
-                    (attribute #,(format-id stx3 "~a.~a"
-                                            #'forward-args-prefix
-                                            'attr-name))
-                    …)]))))])))
+    (syntax-parser-with-arrows
+     [(_ [name:name-or-curry
+          (~var cls (static syntax/parse:stxclass? "a syntax class"))]
+         . body)
+      #:with colon-stxclass (format-id #'cls ":~a" #'cls)
+      #:with name-forward (format-id/record #'name.id
+                                            "~a-forward-attributes" #'name.id)
+      (define c (syntax-local-value/record #'cls syntax/parse:stxclass?))
+      (define attrs (filter-not (λ (a) (is-clause-id-sym?
+                                        (syntax/parse:attr-name a)))
+                                (syntax/parse:stxclass-attrs c)))
+      (define/with-syntax (attr-name …) (map syntax/parse:attr-name attrs))
+      (define/with-syntax (attr-name/ctx …)
+        (stx-map (λ (a) (datum->syntax #'body (syntax-e a)))
+                 #'(attr-name …)))
+      (define-temp-ids "~a/arg" (attr-name …))
+      (define/with-syntax (attr-depth …)
+        (map syntax/parse:attr-depth attrs))
+      (define/with-syntax def-private-simple-api
+        (change-name-or-curry #'name
+                              #'(private-simple-api stx/arg attr-name/arg …)))
+      (syntax/top-loc this-syntax
+        (begin
+          (define (name stx2)
+            (with-arrows
+             (syntax-parameterize ([stx (make-rename-transformer #'stx2)])
+               (syntax-parse stx2
+                 [(_ colon-stxclass) . body]))))
+          (define def-private-simple-api
+            (syntax-parameterize ([stx (make-rename-transformer #'stx/arg)])
+              (syntax-parse #'nothing
+                [(~bind [(attr-name/ctx attr-depth) attr-name/arg] …)
+                 . body])))
+          (define-syntax (name-forward stx3)
+            (syntax-case stx3 ()
+              [(_)
+               (quasisyntax/top-loc stx3
+                 (private-simple-api
+                  stx
+                  (attribute #,(datum->syntax stx3 'attr-name))
+                  …))]
+              [(_ forward-args-prefix)
+               (identifier? #'forward-args-prefix)
+               (quasisyntax/top-loc stx3
+                 (private-simple-api
+                  stx
+                  (attribute #,(format-id stx3 "~a.~a"
+                                          #'forward-args-prefix
+                                          'attr-name))
+                  …))]))))])))

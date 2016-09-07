@@ -18,7 +18,7 @@
          ~mixin
          ~post-check
          ~post-fail
-         ~whole
+         ~named-seq
          ~nop
          ~optional/else
          ~global-or

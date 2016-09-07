@@ -11,7 +11,7 @@
 (provide ~nop
          ~post-check
          ~post-fail
-         ~whole)
+         ~named-seq)
 
 (define-syntax ~nop
   (pattern-expander
@@ -38,14 +38,15 @@
                                          ...))
            #'(~and (~bind [clause-present #t]) . pats))])))
 
-(define-eh-mixin-expander ~whole
+(define-eh-mixin-expander ~named-seq
   (λ (stx)
     (syntax-case stx ()
       [(_ id . pats)
+       (identifier? #'id)
        (let ()
          (define/with-syntax clause-present (get-new-clause!))
          (define/with-syntax clause (get-new-clause!))
-         (eh-post-accumulate! '~whole
+         (eh-post-accumulate! '~named-seq
                               #'(~bind [(id 1) (if (attribute clause-present)
                                                    (attribute clause)
                                                    (list))]))

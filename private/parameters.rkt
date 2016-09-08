@@ -30,6 +30,8 @@
 
 (define-for-syntax clause-counter (make-parameter #f))
 (define-for-syntax (get-new-clause!)
+  (unless clause-counter
+    (error "Use get-new-clause! within (parameterize ([clause-counter …]) …)"))
   (datum->syntax #'here
                  ;; keep the spaces, they allow us to recognize clauses later.
                  (string->symbol (format " -clause-~a " ((clause-counter))))))

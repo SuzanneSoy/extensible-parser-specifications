@@ -33,6 +33,9 @@
 (provide define-eh-alternative-mixin
          ~seq-no-order
          ~no-order
+         ~order-point
+         order-point<
+         order-point>
          (expander-out eh-mixin))
 
 (define-expander-type eh-mixin)
@@ -44,7 +47,8 @@
      #`(begin
          (define-eh-mixin-expander name
            (λ (_)
-             (quote-syntax (~or pat ...))))
+             (syntax-local-syntax-parse-pattern-introduce
+              (quote-syntax (~or pat ...)))))
          #,@(if (attribute splicing-name)
                 #'((define-splicing-syntax-class splicing-name
                      (pattern {~seq-no-order {name}})))
@@ -56,6 +60,15 @@
      (and (identifier? #'o) (free-identifier=? #'o #'~or))
      (apply append (stx-map inline-or #'rest))]
     [x (list #'x)]))
+
+(define-for-syntax parse-seq-order-sym-introducer (make-syntax-introducer))
+
+(define-for-syntax (fix-disappeared-uses)
+  ;; Fix for https://github.com/racket/racket/issues/1452
+  (let ([dis (current-recorded-disappeared-uses)])
+    #`{~do #,(with-disappeared-uses
+              (record-disappeared-uses dis)
+              #'(void))}))
 
 ;; TODO: ~seq-no-order should also be a eh-mixin-expander, so that when there
 ;; are nested ~seq-no-order, the ~post-fail is caught by the nearest
@@ -80,32 +93,71 @@
            (define (add-to-post-groups! . v)
              (set! post-groups-acc (cons v post-groups-acc)))
            ;; expand EH alternatives:
-           (define alts
-             (parameterize ([eh-post-accumulate add-to-post!]
-                            [eh-post-group add-to-post-groups!]
-                            [clause-counter increment-counter])
-               ;(inline-or
-               (expand-all-eh-mixin-expanders #'(~or pat ...))))
-           (define post-group-bindings
-             (for/list ([group (group-by car
-                                         post-groups-acc
-                                         free-identifier=?)])
-               ;; each item in `group` is a four-element list:
-               ;; (list result-id aggregate-function attribute)
-               (define/with-syntax name (first (car group))
-                 #;(syntax-local-introduce
-                    (datum->syntax #'here
-                                   (first (car group)))))
-               (define/with-syntax f (second (car group)))
-               #`[name (f . #,(map (λ (i) #`(attribute #,(third i)))
-                                   group))]))
-           #`(~delimit-cut
-              (~and (~seq #,alts (... ...)) ;;(~or . #,alts)
-                    ~!
-                    (~bind #,@post-group-bindings)
-                    #,@post-acc))))]))))
+           (parameterize ([eh-post-accumulate add-to-post!]
+                          [eh-post-group add-to-post-groups!]
+                          [clause-counter increment-counter])
+             (define alts
+               (expand-all-eh-mixin-expanders #'(~or pat ...)))
+             (define post-group-bindings
+               (for/list ([group (group-by car
+                                           post-groups-acc
+                                           free-identifier=?)])
+                 ;; each item in `group` is a four-element list:
+                 ;; (list result-id aggregate-function attribute)
+                 (define/with-syntax name (first (car group))
+                   #;(syntax-local-introduce
+                      (datum->syntax #'here
+                                     (first (car group)))))
+                 (define/with-syntax f (second (car group)))
+                 #`[name (f . #,(map (λ (i) #`(attribute #,(third i)))
+                                     group))]))
+             (define/with-syntax whole-clause (get-new-clause!))
+             (define/with-syntax parse-seq-order-sym-id
+               (datum->syntax (parse-seq-order-sym-introducer
+                               (syntax-local-introduce #'here))
+                              'parse-seq-order-sym))
+             #`(~delimit-cut
+                (~and #,(fix-disappeared-uses)
+                      {~seq whole-clause (… …)}
+                      {~do (define parse-seq-order-sym-id
+                             (gensym 'parse-seq-order))}
+                      {~parse ({~seq #,alts (… …)})
+                              #`#,(for/list
+                                      ([xi (in-syntax #'(whole-clause (… …)))]
+                                       [i (in-naturals)])
+                                    ;; Add a syntax property before parsing,
+                                    ;; to track the position of matched elements
+                                    ;; using ~order-point
+                                    (syntax-property xi
+                                                     parse-seq-order-sym-id
+                                                     i))}
+                      ~!
+                      (~bind #,@post-group-bindings)
+                      #,@post-acc)))))]))))
 
 (define-syntax ~no-order
   (pattern-expander
    (λ/syntax-case (_ . rest) ()
      #'({~seq-no-order . rest}))))
+
+(define-eh-mixin-expander ~order-point
+  (λ (stx)
+    (define/with-syntax clause-point (get-new-clause!))
+    (define/with-syntax parse-seq-order-sym-id
+      (datum->syntax (parse-seq-order-sym-introducer
+                      (syntax-local-introduce #'here))
+                     'parse-seq-order-sym))
+    (syntax-case stx ()
+      [(_ point-name pat …)
+       #'(~and (~seq clause-point _ (… …))
+               (~bind [point-name (syntax-property #'clause-point
+                                                   parse-seq-order-sym-id)])
+               {~seq pat …})])))
+
+(define-syntax-rule (order-point< a b)
+  (and (attribute a) (attribute b)
+       (< (attribute a) (attribute b))))
+
+(define-syntax-rule (order-point> a b)
+  (and (attribute a) (attribute b)
+       (> (attribute a) (attribute b))))

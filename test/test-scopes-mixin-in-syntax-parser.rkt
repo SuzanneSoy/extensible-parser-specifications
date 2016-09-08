@@ -17,5 +17,5 @@
  "Without the bugfix, the pattern variable \"bar\" above had the wrong scopes,
 and couldn't be used with (attribute bar), and #'bar just gave #'bar instead of
 producing #'42"
- (syntax-e (test #'(#:foo bar)))
+ (syntax-e (test #'(#:foo 42)))
  42)

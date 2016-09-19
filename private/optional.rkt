@@ -10,13 +10,22 @@
 
 (provide ~optional/else)
 
+(begin-for-syntax
+  (define-splicing-syntax-class else-post-fail
+    (pattern (~seq #:else-post-fail message #:when condition))
+    (pattern (~seq #:else-post-fail #:when condition message))
+    (pattern (~seq #:else-post-fail message #:unless unless-condition)
+             #:with condition #'(not unless-condition))
+    (pattern (~seq #:else-post-fail #:when unless-condition message)
+             #:with condition #'(not unless-condition))))
+   
+
 (define-eh-mixin-expander ~optional/else
   (syntax-parser
     [(_ pat
         (~optional (~seq #:defaults (default-binding ...))
                    #:defaults ([(default-binding 1) (list)]))
-        (~seq #:else-post-fail (~or (~seq message #:when condition)
-                                    (~seq #:when condition message)))
+        :else-post-fail
         ...
         (~optional (~seq #:name name)))
      #:with clause-whole (get-new-clause!)

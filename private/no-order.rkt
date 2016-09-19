@@ -99,7 +99,7 @@
              (expand-all-eh-mixin-expanders #'(~or pat ...)))
            (define post-group-bindings
              (for/list ([group (group-by car
-                                         post-groups-acc
+                                         (reverse post-groups-acc)
                                          free-identifier=?)])
                ;; each item in `group` is a four-element list:
                ;; (list result-id aggregate-function attribute)
@@ -132,7 +132,7 @@
                                                    i))}
                     ~!
                     (~bind #,@post-group-bindings)
-                    #,@post-acc))))]))))
+                    #,@(reverse post-acc)))))]))))
 
 (define-syntax ~no-order
   (pattern-expander

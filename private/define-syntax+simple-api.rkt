@@ -18,7 +18,7 @@
          (for-meta 2 syntax/parse)
          (for-meta 2 phc-toolkit/untyped))
 
-(define-syntax/parse (define-syntax/parse+simple (~optional (~and two #:2))
+(define-syntax/parse (define-syntax/parse+simple
                        [name . args] . body)
   (with-format-ids/inject-binders
    ([name-forward #'name "~a-forward-attributes" #'name]

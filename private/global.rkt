@@ -24,7 +24,7 @@
     [(_ (~or [name v] (~and name
                             (~fail #:unless default)
                             (~bind [v default])))
-        . pats)
+        pat ...)
      #:with clause-value (get-new-clause!)
      (eh-post-group! '~global-name
                      #'name
@@ -32,8 +32,8 @@
                      #'clause-value)
      ;; protect the values inside an immutable box, so that a #f can be
      ;; distinguished from a failed match.
-     #'(~and (~bind [clause-value (box-immutable v)])
-             . pats)]))
+     #'(~and pat ...
+             (~bind [clause-value (box-immutable v)]))]))
 
 (define (aggregate-global-or . bs)
   (ormap unbox ;; remove the layer of protection
@@ -51,8 +51,8 @@
   (make-~global #'aggregate-global-and))
 
 (define (aggregate-global-counter . bs)
-  (length (filter identity ;; remove failed bindings
-                  (flatten bs)))) ;; don't care about ellipsis nesting
+  (apply + (filter identity ;; remove failed bindings
+                   (flatten bs)))) ;; don't care about ellipsis nesting
 (define-eh-mixin-expander ~global-counter
-  (make-~global #'aggregate-global-counter #''occurrence))
+  (make-~global #'aggregate-global-counter #'+1))
 

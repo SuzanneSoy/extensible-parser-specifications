@@ -65,6 +65,10 @@
                                      message))
        #'(~bind [clause-present #t]))]
     [(self #:when condition message)
-     (post-fail #'(self message #:when condition))]))
+     (post-fail #'(self message #:when condition))]
+    [(self message #:unless unless-condition)
+     (post-fail #'(self message #:when (not unless-condition)))]
+    [(self #:unless unless-condition message)
+     (post-fail #'(self message #:when (not unless-condition)))]))
 
 (define-eh-mixin-expander ~post-fail post-fail)

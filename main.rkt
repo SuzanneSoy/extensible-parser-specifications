@@ -7,6 +7,7 @@
          "private/global.rkt"
          "private/optional.rkt"
          "private/mixin.rkt"
+         "private/try-attribute.rkt"
          (for-template "private/define-syntax+simple-api.rkt")
          syntax/parse)
 
@@ -36,4 +37,5 @@
          aggregate-global-and
          aggregate-global-counter
          (for-template define-syntax/parse+simple)
-         define/syntax-parse+simple)
+         define/syntax-parse+simple
+         try-attribute)

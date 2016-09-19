@@ -4,8 +4,11 @@
                "rackunit-lib"
                "phc-toolkit"
                "generic-syntax-expanders"))
-(define build-deps '("scribble-lib" "racket-doc"))
+(define build-deps '("scribble-lib"
+                     "racket-doc"
+                     "seq-no-order"))
 (define scribblings '(("scribblings/extensible-parser-specifications.scrbl" ())))
-(define pkg-desc "Description Here")
+(define pkg-desc (string-append "Composable no-order syntax/parse"
+                                " specifications, with global constraints"))
 (define version "0.1")
 (define pkg-authors '(|Georges Dupéron|))

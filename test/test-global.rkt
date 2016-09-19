@@ -61,7 +61,7 @@
     (attribute kw-not-number)])
  #t)
 
-;; Tests from the documentation:
+;; former tests from the documentation:
 
 (check-equal?
  (syntax-parse #'(1 ya (2 #f 3) 4 yb (5 #f 6) yc 7)
@@ -71,7 +71,7 @@
                 …)
                {~global-or [g (syntax-e #'w)] w:str})
     (attribute g)])
- 'ya)
+ #t)
 
 (check-equal?
  (syntax-parse #'(1 ya (2 3) 4 yb (5 6) yc 7)
@@ -81,4 +81,4 @@
                 …)
                {~global-and [g (syntax-e #'w)] w:str})
     (attribute g)])
- 6)
+ #t)

@@ -3,7 +3,8 @@
 (define deps '("base"
                "rackunit-lib"
                "phc-toolkit"
-               "generic-syntax-expanders"))
+               "generic-syntax-expanders"
+               "alexis-util"))
 (define build-deps '("scribble-lib"
                      "racket-doc"
                      "seq-no-order"))

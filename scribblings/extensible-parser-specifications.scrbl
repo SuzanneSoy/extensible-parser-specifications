@@ -1,9 +1,15 @@
 #lang scribble/manual
-@require[@for-label[phc-toolkit/untyped
+@require[scribble/example
+         @for-label[phc-toolkit/untyped
                     extensible-parser-specifications
                     generic-syntax-expanders
                     racket/base
+                    syntax/parse
                     (only-in racket/base [... …])]]
+
+@(define make-evaluator
+   (make-eval-factory '(syntax/parse
+                        extensible-parser-specifications)))
 
 @title{extensible-parser-specifications}
 @author{@author+email["Georges Dupéron" "georges.duperon@gmail.com"]}
@@ -286,9 +292,10 @@ the notion of order irrelevant.
  value within any @racket[valueᵢ] group is @racket[#f], then the
  @racket[_attribute-name] is bound to @racket[#f].
  
- For example, the following code produces @racket[6]:
- 
- @racketblock[
+ @examples[
+ #:eval (make-evaluator)
+ #:once
+ #:label "For example, the following code produces 6:"
  (syntax-parse #'(1 ya (2 3) 4 yb (5 6) yc 7)
    [(~no-order {~and x:id {~global-and [g (syntax-e #'x)]}}
                {~global-and [g (syntax-e #'y)] y:number}

@@ -352,6 +352,12 @@ appear in the matched syntax (aside from issues related to greediness).
  declared, while using the operation's neutral element to not alter the final
  result.}
 
+@defform[(if-attribute #,tribute-name if-branch else-branch)]{
+ This macro expands to @racket[if-branch] if @racket[#,tribute-name] is bound as
+ a syntax pattern variable, and to @racket[else-branch] otherwise.
+
+ The same caveats as for @racket[try-attribute] apply.}
+
 @defform[(~named-seq #,tribute-name #,ntax-pattern ...)]{
  Equivalent to @racket[{~seq #,ntax-pattern ...}], but also binds the
  @racket[#,tribute-name] to the whole sequence. If the sequence appears inside

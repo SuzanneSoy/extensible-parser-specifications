@@ -262,8 +262,13 @@ the notion of order irrelevant.
  matches of a global pattern using the same @racket[#,tribute-name]. See above
  for a description of how global operations work.
 
- The result is always transformed into a boolean, so @racket[_attribute-name] is
- always bound to either @racket[#t] or @racket[#f].}
+ If there is at least one occurrence of @racket[~global-and] for that
+ @racket[_attribute-name] which successfully matches, the result of the
+ @racket[(and valueᵢ ...)] is always coerced to a boolean, so
+ @racket[_attribute-name] is always bound to either @racket[#t] or @racket[#f].
+
+ If there are no matches at all, the special value @racket['none] is used
+ instead of @racket[#t] as would be produced by @racket[(and)].}
 
 @defform[(~global-counter attribute-name+value #,ntax-pattern ...)
          #:grammar

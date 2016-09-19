@@ -44,11 +44,13 @@
   (make-~global #'aggregate-global-or #'#t))
 
 (define (aggregate-global-and . bs)
-  (true? ;; force the result to be a boolean, the order of terms is unimportant
-   (andmap unbox ;; remove the layer of protection
-           (cons (box-immutable 'none) ;; default value when no bindings matched
-                 (filter identity ;; remove failed bindings
-                         (flatten bs)))))) ;; don't care about ellipsis nesting
+  (let ([matches (filter identity ;; remove failed bindings
+                         (flatten bs))])
+    (if (null? matches)
+        'none ;; no matches occurred
+        (true? ;; coerce to boolean, so that the order of terms is unimportant
+         (andmap unbox ;; remove the layer of protection
+                 matches))))) ;; don't care about ellipsis nesting
 (define-eh-mixin-expander ~global-and
   (make-~global #'aggregate-global-and))
 

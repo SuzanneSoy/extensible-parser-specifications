@@ -28,7 +28,8 @@
                      phc-toolkit/untyped
                      racket/list
                      racket/pretty)
-         "parameters.rkt")
+         "parameters.rkt"
+         "try-attribute.rkt")
 
 (provide define-eh-alternative-mixin
          ~seq-no-order
@@ -36,6 +37,8 @@
          ~order-point
          order-point<
          order-point>
+         try-order-point<
+         try-order-point>
          (expander-out eh-mixin))
 
 (define-expander-type eh-mixin)
@@ -160,3 +163,9 @@
 (define-syntax-rule (order-point> a b)
   (and (attribute a) (attribute b)
        (> (attribute a) (attribute b))))
+
+(define-syntax-rule (try-order-point< a b)
+  (if-attribute a (if-attribute b (order-point< a b) #f) #f))
+
+(define-syntax-rule (try-order-point> a b)
+  (if-attribute a (if-attribute b (order-point> a b) #f) #f))

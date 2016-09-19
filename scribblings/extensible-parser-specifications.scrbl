@@ -136,21 +136,61 @@
          #:grammar
          [(a #,tribute-name)
           (b #,tribute-name)]]{
-                          
  Returns @racket[#t] when the first element matched by
  @racket[(~order-point a #,ntax-pattern ...)] occurs before the first element
  matched by @racket[(~order-point b #,ntax-pattern ...)]. Otherwise, returns
- @racket[#f].}
+ @racket[#f].
+
+ This operation does not fail if @racket[a] or @racket[b] are bound to
+ @racket[#f] (i.e. their corresponding @racket[_syntax-pattern ...] did not
+ match). Instead, in both cases, it returns @racket[#f].}
 
 @defform[(order-point> a b)
          #:grammar
          [(a #,tribute-name)
           (b #,tribute-name)]]{
-                          
  Returns @racket[#t] when the first element matched by
  @racket[(~order-point a #,ntax-pattern ...)] occurs after the first element
  matched by @racket[(~order-point b #,ntax-pattern ...)]. Otherwise, returns
- @racket[#f].}
+ @racket[#f].
+
+ This operation does not fail if @racket[a] or @racket[b] are bound to
+ @racket[#f] (i.e. their corresponding @racket[_syntax-pattern ...] did not
+ match). Instead, in both cases, it returns @racket[#f].}
+
+@defform[(try-order-point< a b)
+         #:grammar
+         [(a #,tribute-name)
+          (b #,tribute-name)]]{
+
+ Like @racket[order-point<], except that it does not fail if @racket[a] or
+ @racket[b] are not attributes, or if they are bound to @racket[#f]. Instead, in
+ all those cases, it returns @racket[#f].
+
+ It can be used as follows:
+
+ @racketblock[
+ (~post-fail "a must appear after b"
+             #:when (try-order-point< a b))]
+
+ The same caveats as for @racket[try-attribute] apply.}
+
+@defform[(try-order-point> a b)
+         #:grammar
+         [(a #,tribute-name)
+          (b #,tribute-name)]]{
+
+ Like @racket[order-point>], except that it does not fail if @racket[a] or
+ @racket[b] are not attributes, or if they are bound to @racket[#f]. Instead, in
+ all those cases, it returns @racket[#f].
+
+ It can be used as follows:
+
+ @racketblock[
+ (~post-fail "a must appear before b"
+             #:when (try-order-point> a b))]
+
+ The same caveats as for @racket[try-attribute] apply.}
 
 @defform[(~mixin #,-alternative-mixin)]{
                                         

@@ -24,6 +24,8 @@
          ~order-point
          order-point<
          order-point>
+         try-order-point<
+         try-order-point>
          ~mixin
          ~post-check
          ~post-fail
@@ -38,4 +40,5 @@
          aggregate-global-counter
          (for-template define-syntax/parse+simple)
          define/syntax-parse+simple
-         try-attribute)
+         try-attribute
+         if-attribute)

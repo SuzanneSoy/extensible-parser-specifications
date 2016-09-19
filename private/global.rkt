@@ -36,17 +36,19 @@
              (~bind [clause-value (box-immutable v)]))]))
 
 (define (aggregate-global-or . bs)
-  (ormap unbox ;; remove the layer of protection
-         (filter identity ;; remove failed bindings
-                 (flatten bs)))) ;; don't care about ellipsis nesting
+  (true? ;; force the result to be a boolean, the order of terms is unimportant
+   (ormap unbox ;; remove the layer of protection
+          (filter identity ;; remove failed bindings
+                  (flatten bs))))) ;; don't care about ellipsis nesting
 (define-eh-mixin-expander ~global-or
   (make-~global #'aggregate-global-or #'#t))
 
 (define (aggregate-global-and . bs)
-  (andmap unbox ;; remove the layer of protection
-          (cons (box-immutable 'none) ;; default value when no bindings matched
-                (filter identity ;; remove failed bindings
-                        (flatten bs))))) ;; don't care about ellipsis nesting
+  (true? ;; force the result to be a boolean, the order of terms is unimportant
+   (andmap unbox ;; remove the layer of protection
+           (cons (box-immutable 'none) ;; default value when no bindings matched
+                 (filter identity ;; remove failed bindings
+                         (flatten bs)))))) ;; don't care about ellipsis nesting
 (define-eh-mixin-expander ~global-and
   (make-~global #'aggregate-global-and))
 

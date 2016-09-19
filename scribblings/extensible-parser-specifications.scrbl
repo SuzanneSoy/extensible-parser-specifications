@@ -251,31 +251,8 @@ the notion of order irrelevant.
                                                      
  If the @racket[valueᵢ] is omitted, @racket[#t] is used as a default.
 
- Since the aggregation function is @racket[or], the order in which values are
- aggregated means that within each @racket[valueᵢ] group, the first
- non-@racket[#f] value with a successful match of the corresponding
- @racket[_syntax-pattern]s is used. The first @racket[valueᵢ] for which that
- result is not @racket[#f], and with at least one successful match is then used.
-
- For example, the following code produces @racket['ya]:
- 
- @racketblock[
- (syntax-parse #'(1 ya (2 #f 3) 4 yb (5 #f 6) yc 7)
-   [(~no-order {~and x:id {~global-or [g (syntax-e #'x)]}}
-               {~global-or [g (syntax-e #'y)] y:number}
-               ({~global-or [g (syntax-e #'z)] (~and z (~or :number #f))}
-                …)
-               {~global-or [g (syntax-e #'w)] w:str})
-    (attribute g)])]
-
- This is because the following call to @racket[or] is executed:
-
- @racketblock[
- (or 'ya 'yb 'yc   (code:comment "matches for x")
-     1 4 7         (code:comment "matches for y")
-     2 #f 3 4 #f 6 (code:comment "matches for z")
-     (code:comment "no matches for w"))]
-}
+ The result is always transformed into a boolean, so @racket[_attribute-name] is
+ always bound to either @racket[#t] or @racket[#f].}
 
 @defform[(~global-and attribute-name+value #,ntax-pattern ...)
          #:grammar
@@ -284,39 +261,9 @@ the notion of order irrelevant.
  perform a global @racket[and] over all the values corresponding to successful
  matches of a global pattern using the same @racket[#,tribute-name]. See above
  for a description of how global operations work.
-                                                     
- Since the aggregation function is @racket[or], the order in which values are
- aggregated means that within each @racket[valueᵢ] group, the last value with a
- successful match of the corresponding @racket[_syntax-pattern]s is used. The
- last @racket[valueᵢ] with at least one successful match is then used. If any
- value within any @racket[valueᵢ] group is @racket[#f], then the
- @racket[_attribute-name] is bound to @racket[#f].
- 
- @examples[
- #:eval (make-evaluator)
- #:once
- #:label "For example, the following code produces 6:"
- (syntax-parse #'(1 ya (2 3) 4 yb (5 6) yc 7)
-   [(~no-order {~and x:id {~global-and [g (syntax-e #'x)]}}
-               {~global-and [g (syntax-e #'y)] y:number}
-               ({~global-and [g (syntax-e #'z)] (~and z :number)}
-                …)
-               {~global-and [g (syntax-e #'w)] w:str})
-    (attribute g)])]
 
- This is because the following call to @racket[or] is executed:
-
- @racketblock[
- (and 'ya 'yb 'yc   (code:comment "matches for x")
-      1 4 7         (code:comment "matches for y")
-      2 3 4 6       (code:comment "matches for z")
-      (code:comment "no matches for w"))]
-
- This @tech{eh-mixin expander} is intended to be used to aggregate boolean
- values, so the order in which matches are taken into account should not be
- significant. To perform checks on the order in which matches appear within a
- @racket[~no-order] or @racket[~seq-no-order], see @racket[~order-point],
- @racket[order-point<] and @racket[order-point>].}
+ The result is always transformed into a boolean, so @racket[_attribute-name] is
+ always bound to either @racket[#t] or @racket[#f].}
 
 @defform[(~global-counter attribute-name+value #,ntax-pattern ...)
          #:grammar

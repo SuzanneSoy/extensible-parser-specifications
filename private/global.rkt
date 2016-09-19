@@ -51,8 +51,9 @@
   (make-~global #'aggregate-global-and))
 
 (define (aggregate-global-counter . bs)
-  (apply + (filter identity ;; remove failed bindings
-                   (flatten bs)))) ;; don't care about ellipsis nesting
+  (apply + (map unbox
+                (filter identity ;; remove failed bindings
+                        (flatten bs))))) ;; don't care about ellipsis nesting
 (define-eh-mixin-expander ~global-counter
   (make-~global #'aggregate-global-counter #'+1))
 

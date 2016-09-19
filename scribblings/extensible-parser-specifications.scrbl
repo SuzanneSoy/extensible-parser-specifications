@@ -40,11 +40,11 @@
  @tech[#:doc '(lib "syntax/scribblings/syntax.scrbl")]{ellipsis-head alternative
   set}, except that it can only appear as part of a @racket[~no-order] (possibly
  nested under other eh-alternative mixins), and can contain some global
- constraints. The global constraints, detailed below, allow the parser to perform
- checks across two or more mixins. For example, given a set of options that can
- appear in any order, it is possible to specify that two of them are mutually
- exclusive, or that two other must appear in a certain order, regardless of the
- order of the other options.
+ constraints. The global constraints, detailed below, allow the parser to
+ perform checks across two or more mixins. For example, given a set of options
+ that can appear in any order, it is possible to specify that two of them are
+ mutually exclusive, or that two other must appear in a certain order,
+ regardless of the order of the other options.
 
  The @racket[derived-or] term covers any
  @tech[#:doc '(lib "syntax/scribblings/syntax.scrbl")]{pattern expander} or
@@ -236,8 +236,8 @@ the notion of order irrelevant.
 
 @defform[(~global-or attribute-name+value #,ntax-pattern ...)
          #:grammar
-         [(attribute-name [#,tribute-name]
-                          [#,tribute-name valueᵢ])]]{
+         [(attribute-name+value #,tribute-name
+                                [#,tribute-name valueᵢ])]]{
  Matches all of the given @racket[#,ntax-pattern]s, like @racket[~and] does, and
  perform a global @racket[or] over all the values corresponding to successful
  matches of a global pattern using the same @racket[#,tribute-name]. See above
@@ -254,7 +254,7 @@ the notion of order irrelevant.
  For example, the following code produces @racket['ya]:
  
  @racketblock[
- (syntax-parse #'(1 'ya (2 #f 3) 4 'yb (5 #f 6) 'yc 7)
+ (syntax-parse #'(1 ya (2 #f 3) 4 yb (5 #f 6) yc 7)
    [(~no-order {~and x:id {~global-or [g (syntax-e #'x)]}}
                {~global-or [g (syntax-e #'y)] y:number}
                ({~global-or [g (syntax-e #'z)] (~and z (~or :number #f))}
@@ -271,9 +271,9 @@ the notion of order irrelevant.
      (code:comment "no matches for w"))]
 }
 
-@defform[(~global-or attribute-name+value #,ntax-pattern ...)
+@defform[(~global-and attribute-name+value #,ntax-pattern ...)
          #:grammar
-         [(attribute-name [#,tribute-name valueᵢ])]]{
+         [(attribute-name+value [#,tribute-name valueᵢ])]]{
  Matches all of the given @racket[#,ntax-pattern]s, like @racket[~and] does, and
  perform a global @racket[and] over all the values corresponding to successful
  matches of a global pattern using the same @racket[#,tribute-name]. See above
@@ -289,7 +289,7 @@ the notion of order irrelevant.
  For example, the following code produces @racket[6]:
  
  @racketblock[
- (syntax-parse #'(1 'ya (2 3) 4 'yb (5 6) 'yc 7)
+ (syntax-parse #'(1 ya (2 3) 4 yb (5 6) yc 7)
    [(~no-order {~and x:id {~global-and [g (syntax-e #'x)]}}
                {~global-and [g (syntax-e #'y)] y:number}
                ({~global-and [g (syntax-e #'z)] (~and z :number)}
@@ -311,7 +311,10 @@ the notion of order irrelevant.
  @racket[~no-order] or @racket[~seq-no-order], see @racket[~order-point],
  @racket[order-point<] and @racket[order-point>].}
 
-@defform[(~global-counter)]{
+@defform[(~global-counter attribute-name+value #,ntax-pattern ...)
+         #:grammar
+         [(attribute-name+value #,tribute-name
+                                [#,tribute-name valueᵢ])]]{
  Matches all of the given @racket[#,ntax-pattern]s, like @racket[~and] does, and
  perform a global @racket[+] over all the values corresponding to successful
  matches of a global pattern using the same @racket[#,tribute-name]. See above

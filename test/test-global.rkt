@@ -13,8 +13,8 @@
 
 (check-equal?
  (syntax-parse #'(1 "ab" #:kw "ab" 3 4 5)
-   [({~seq-no-order {~once {~global-counter [cnt 'occurrencea] #:kw}}
-                    {~global-counter [cnt 'occurrenceb] :number}
+   [({~seq-no-order {~once {~global-counter [cnt 1] #:kw}}
+                    {~global-counter [cnt 1] :number}
                     "ab"})
     (attribute cnt)])
  5)
@@ -60,3 +60,25 @@
                     "ab"})
     (attribute kw-not-number)])
  #t)
+
+;; Tests from the documentation:
+
+(check-equal?
+ (syntax-parse #'(1 ya (2 #f 3) 4 yb (5 #f 6) yc 7)
+   [(~no-order {~and x:id {~global-or [g (syntax-e #'x)]}}
+               {~global-or [g (syntax-e #'y)] y:number}
+               ({~global-or [g (syntax-e #'z)] (~and z (~or :number #f))}
+                …)
+               {~global-or [g (syntax-e #'w)] w:str})
+    (attribute g)])
+ 'ya)
+
+(check-equal?
+ (syntax-parse #'(1 ya (2 3) 4 yb (5 6) yc 7)
+   [(~no-order {~and x:id {~global-and [g (syntax-e #'x)]}}
+               {~global-and [g (syntax-e #'y)] y:number}
+               ({~global-and [g (syntax-e #'z)] (~and z :number)}
+                …)
+               {~global-and [g (syntax-e #'w)] w:str})
+    (attribute g)])
+ 6)

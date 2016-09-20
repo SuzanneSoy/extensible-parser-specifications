@@ -35,9 +35,6 @@
          ~global-or
          ~global-and
          ~global-counter
-         aggregate-global-or
-         aggregate-global-and
-         aggregate-global-counter
          (for-template define-syntax/parse+simple)
          define/syntax-parse+simple
          try-attribute

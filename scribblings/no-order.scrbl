@@ -47,11 +47,15 @@
  Like @racket[~seq-no-order], except that it matches a syntax list, instead of
  being spliced into the surrounding sequence of patterns. In other words,
 
- @racketblock[(~seq-no-order clause-or-mixin ...)]
+ @racketblock[({~seq-no-order clause-or-mixin ...})]
  
- Equivalent to (notice the extra pair of braces):
+ is equivalent to (notice the extra pair of braces above):
 
- @racketblock[({~seq-no-order clause-or-mixin ...})]}
+ @racketblock[(~no-order clause-or-mixin ...)]
+
+ Additionally, @racket[~no-order] can include clauses which use
+ @racket[~lift-rest], which lifts a pattern which matches the tail of an
+ improper list.}
 
 @section{Enforcing a partial order on the alternatives}
 

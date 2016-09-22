@@ -51,7 +51,9 @@
 
 (define-syntax define-eh-alternative-mixin
   (syntax-parser
-    [(_ name (~maybe #:define-splicing-syntax-class splicing-name)
+    [(_ name
+        (~maybe #:define-splicing-syntax-class splicing-name)
+        (~maybe #:define-syntax-class class-name)
         ((~literal pattern) pat) ...)
      #`(begin
          (define-eh-mixin-expander name
@@ -61,6 +63,10 @@
          #,@(if (attribute splicing-name)
                 #'((define-splicing-syntax-class splicing-name
                      (pattern {~seq-no-order {name}})))
+                #'())
+         #,@(if (attribute class-name)
+                #'((define-syntax-class class-name
+                     (pattern {~no-order {name}})))
                 #'()))]))
 
 (define-for-syntax (inline-or stx)

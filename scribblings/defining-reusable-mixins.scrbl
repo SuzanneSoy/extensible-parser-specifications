@@ -11,10 +11,16 @@
 @title{Defining reusable parser mixins}
 
 @defform[#:literals (pattern)
-         (define-eh-alternative-mixin name maybe-define-class
+         (define-eh-alternative-mixin name
+           maybe-splicing-class
+           maybe-define-splicing-class
            (pattern clause-or-mixin) ...)
          #:grammar
          [(maybe-define-class
+           (code:line)
+           (code:line #:define-syntax-class class-name))
+          (maybe-define-splicing-class
+           (code:line)
            (code:line #:define-splicing-syntax-class splicing-name))
           (clause-or-mixin #,ntax-pattern
                            (~mixin #,-alternative-mixin)
@@ -34,7 +40,14 @@
  The @racket[derived-or] term covers any
  @tech[#:doc '(lib "syntax/scribblings/syntax.scrbl")]{pattern expander} or
  @tech{eh-mixin expander} application which expands to a
- @racket[clause-or-mixin].}
+ @racket[clause-or-mixin].
+
+ The @racket[#:define-syntax-class] option defines a syntax class with the given
+ @racket[class-name] which matches @racket[{~no-order {~mixin name}}].
+
+ The @racket[#:define-splicing-syntax-class] option defines a splicing syntax
+ class with the given @racket[class-name] which matches
+ @racket[{~seq-no-order {~mixin name}}].}
 
 @deftogether[[@defthing[#:kind "for-syntax value"
                         eh-mixin-expander-type expander-type?]

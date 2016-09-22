@@ -1,11 +1,12 @@
 #lang scribble/manual
 @require[scribble/example
          "utils.rkt"
-         @for-label[phc-toolkit/untyped
+         @for-label[(except-in phc-toolkit/untyped stx-cdr)
                     extensible-parser-specifications
                     generic-syntax-expanders
                     racket/base
                     syntax/parse
+                    (only-in syntax/stx stx-cdr)
                     (only-in racket/base [... …])]]
 
 @title{Chaining macro calls without re-parsing everything}
@@ -14,16 +15,30 @@
          #:grammar
          [(name-or-curry name
                          (name-or-curry arg ...))
-          (maybe-define-class #:define-splicing-syntax-class class-id)
+          (maybe-define-class
+           (code:line)
+           (code:line #:define-syntax-class splicing-name))
+          (maybe-define-splicing-class
+           (code:line)
+           (code:line #:define-splicing-syntax-class splicing-name))
           (name identifier?)
-          (class-id identifier?)]]{
+          (class-name identifier?)
+          (splicing-name identifier?)]]{
  This macro works like @racket[define/syntax-parse] from @racket[phc-toolkit],
  except that it also defines the function @racket[_name-forward-attributes],
  which can be used by other macros to forward already parsed attributes to the
  @racket[body], without the need to parse everything a second time.
 
  The syntax pattern for the @racket[name] macro's arguments can be saved in a
- syntax class by specifying the @racket[#:define-splicing-syntax-class] option.
+ splicing syntax class by specifying the @racket[#:define-splicing-syntax-class]
+ option. The pattern only includes the arguments after the name, i.e it matches
+ @racket[(stx-cdr stx)].
+
+ The syntax pattern for the @racket[name] macro's arguments can be saved in a
+ syntax class by specifying the @racket[#:define-syntax-class] option. The
+ pattern only includes the arguments after the name, i.e it matches
+ @racket[(stx-cdr stx)].
+
 
  If the caller macro which uses @racket[(_name-forward-attributes)] parsed its
  own @racket[stx] argument using @racket[class-id], then

@@ -279,40 +279,40 @@
     (syntax-case stx ()
       [(_ other message pat …)
        (and (identifier? #'other)
-            (string? (syntax-e #'message))
-            #'{~order-point pt
-                {~seq pat …}
-                {~post-fail message #:when (order-point> pt other)}})])))
+            (string? (syntax-e #'message)))
+       #'{~order-point pt
+           {~seq pat …}
+           {~pre-fail message #:when (order-point> pt other)}}])))
 
 (define-eh-mixin-expander ~after
   (λ (stx)
     (syntax-case stx ()
       [(_ other message pat …)
        (and (identifier? #'other)
-            (string? (syntax-e #'message))
-            #'{~order-point pt
-                {~seq pat …}
-                {~post-fail message #:when (order-point< pt other)}})])))
+            (string? (syntax-e #'message)))
+       #'{~order-point pt
+           {~seq pat …}
+           {~pre-fail message #:when (order-point< pt other)}}])))
 
 (define-eh-mixin-expander ~try-before
   (λ (stx)
     (syntax-case stx ()
       [(_ other message pat …)
        (and (identifier? #'other)
-            (string? (syntax-e #'message))
-            #'{~order-point pt
-                {~seq pat …}
-                {~post-fail message #:when (try-order-point> pt other)}})])))
+            (string? (syntax-e #'message)))
+       #'{~order-point pt
+           {~seq pat …}
+           {~pre-fail message #:when (try-order-point> pt other)}}])))
 
 (define-eh-mixin-expander ~try-after
   (λ (stx)
     (syntax-case stx ()
       [(_ other message pat …)
        (and (identifier? #'other)
-            (string? (syntax-e #'message))
-            #'{~order-point pt
-                {~seq pat …}
-                {~post-fail message #:when (try-order-point< pt other)}})])))
+            (string? (syntax-e #'message)))
+       #'{~order-point pt
+           {~seq pat …}
+           {~pre-fail message #:when (try-order-point< pt other)}}])))
 
 (define-syntax ~omitable-lifted-rest
   (pattern-expander

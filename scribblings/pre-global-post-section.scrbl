@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@title{Post operations and global operations}
+@title{Pre, global and post operations}
 
 Pre operations happen before the @racket[~!] backtracking cut, so they can
 affect what combination of alternative clauses the parser will choose. Post

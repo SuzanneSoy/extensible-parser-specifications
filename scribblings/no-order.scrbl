@@ -146,7 +146,10 @@
  auto-detects if the @racket[other] order-point is not defined as part of the
  current @racket[~no-order]. Do not rely on comparisons with order points
  somehow defined outside the current @racket[~no-order], as that behaviour may
- change in the future.}
+ change in the future.
+
+ This is implemented as a @seclink["Pre__global_and_post_operations"]{pre
+  operation}.}
 
 @defform[#:kind "eh-mixin-expander"
          (~after other message pat ...)]{
@@ -161,7 +164,10 @@
  auto-detects if the @racket[other] order-point is not defined as part of the
  current @racket[~no-order]. Do not rely on comparisons with order points
  somehow defined outside the current @racket[~no-order], as that behaviour may
- change in the future.}
+ change in the future.
+
+ This is implemented as a @seclink["Pre__global_and_post_operations"]{pre
+  operation}.}
 
 @defform[#:kind "eh-mixin-expander"
          (~try-before other message pat ...)]{
@@ -177,7 +183,10 @@
 
  Note: Hopefully @racket[~before] will be modified in the future so that it
  auto-detects if the @racket[other] order-point is missing. This form will then
- be removed.}
+ be removed.
+
+ This is implemented as a @seclink["Pre__global_and_post_operations"]{pre
+  operation}.}
 
 @defform[#:kind "eh-mixin-expander"
          (~try-after other message pat ...)]{
@@ -192,5 +201,8 @@
 
  Note: Hopefully @racket[~after] will be modified in the future so that it
  auto-detects if the @racket[other] order-point is missing. This form will then
- be removed.}
+ be removed.
+
+ This is implemented as a @seclink["Pre__global_and_post_operations"]{pre
+  operation}.}
 

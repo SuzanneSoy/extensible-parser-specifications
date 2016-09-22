@@ -6,7 +6,8 @@
                      syntax/parse
                      phc-toolkit/untyped)
          "no-order.rkt"
-         "pre.rkt")
+         "pre.rkt"
+         "parameters.rkt")
 
 (provide ~before
          ~after
@@ -19,9 +20,10 @@
       [(_ other message pat …)
        (and (identifier? #'other)
             (string? (syntax-e #'message)))
-       #'{~order-point pt
-           {~seq pat …}
-           {~pre-fail message #:when (order-point> pt other)}}])))
+       (with-syntax ([pt (get-new-clause!)])
+         #'{~order-point pt
+             {~seq pat …}
+             {~pre-fail message #:when (order-point> pt other)}})])))
 
 (define-eh-mixin-expander ~after
   (λ (stx)
@@ -29,9 +31,10 @@
       [(_ other message pat …)
        (and (identifier? #'other)
             (string? (syntax-e #'message)))
-       #'{~order-point pt
-           {~seq pat …}
-           {~pre-fail message #:when (order-point< pt other)}}])))
+       (with-syntax ([pt (get-new-clause!)])
+         #'{~order-point pt
+             {~seq pat …}
+             {~pre-fail message #:when (order-point< pt other)}})])))
 
 (define-eh-mixin-expander ~try-before
   (λ (stx)
@@ -39,9 +42,10 @@
       [(_ other message pat …)
        (and (identifier? #'other)
             (string? (syntax-e #'message)))
-       #'{~order-point pt
-           {~seq pat …}
-           {~pre-fail message #:when (try-order-point> pt other)}}])))
+       (with-syntax ([pt (get-new-clause!)])
+         #'{~order-point pt
+             {~seq pat …}
+             {~pre-fail message #:when (try-order-point> pt other)}})])))
 
 (define-eh-mixin-expander ~try-after
   (λ (stx)
@@ -49,6 +53,7 @@
       [(_ other message pat …)
        (and (identifier? #'other)
             (string? (syntax-e #'message)))
-       #'{~order-point pt
-           {~seq pat …}
-           {~pre-fail message #:when (try-order-point< pt other)}}])))
+       (with-syntax ([pt (get-new-clause!)])
+         #'{~order-point pt
+             {~seq pat …}
+             {~pre-fail message #:when (try-order-point< pt other)}})])))

@@ -2,13 +2,17 @@
 
 (require (for-syntax racket/base))
 
-(provide (for-syntax eh-post-accumulate
+(provide (for-syntax eh-pre-accumulate
+                     eh-pre-accumulate!
+                     eh-post-accumulate
                      eh-post-accumulate!
                      eh-post-group
                      eh-post-group!
                      clause-counter
                      get-new-clause!
-                     is-clause-id-sym?))
+                     is-clause-id-sym?
+                     lift-rest
+                     lift-rest!))
 
 (define-syntax-rule (define-dynamic-accumulator-parameter parameter-name name!)
   (begin
@@ -20,8 +24,10 @@
                                            " used outside of ~seq-no-order")))
       (apply (parameter-name) args))))
 
-(define-dynamic-accumulator-parameter eh-post-accumulate eh-post-accumulate!)
+(define-dynamic-accumulator-parameter eh-pre-accumulate eh-pre-accumulate!)
 (define-dynamic-accumulator-parameter eh-post-group eh-post-group!)
+(define-dynamic-accumulator-parameter eh-post-accumulate eh-post-accumulate!)
+(define-dynamic-accumulator-parameter lift-rest lift-rest!)
 
 ;; This is a crude hack.
 (define-for-syntax (is-clause-id-sym? id-sym)

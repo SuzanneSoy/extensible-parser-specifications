@@ -3,11 +3,13 @@
 (require generic-syntax-expanders
          "private/parameters.rkt"
          "private/no-order.rkt"
+         "private/pre.rkt"
          "private/post.rkt"
          "private/global.rkt"
          "private/optional.rkt"
          "private/mixin.rkt"
          "private/try-attribute.rkt"
+         "private/nop.rkt"
          (for-template "private/define-syntax+simple-api.rkt")
          syntax/parse)
 
@@ -26,9 +28,13 @@
          order-point>
          try-order-point<
          try-order-point>
+         ~before
+         ~after
+         ~lift-rest
          ~mixin
          ~post-check
          ~post-fail
+         ~maybe/empty
          ~named-seq
          ~nop
          ~optional/else

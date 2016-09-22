@@ -40,5 +40,5 @@
 (check-fail-abc #'(#:c #:b #:a) #px"#:a must appear after #:b")
 (check-fail-abc #'(#:b #:c #:a) #px"#:a must appear after #:b")
 (check-fail-abc #'(#:b #:a #:c) #px"#:a must appear after #:b")
-(check-fail-abc #'(#:a #:a) #px"unexpected term")
-(check-fail-abc #'(#:c #:c) #px"unexpected term")
+(check-fail-abc #'(#:a #:a) #px"expected abc-order")
+(check-fail-abc #'(#:c #:c) #px"expected abc-order")

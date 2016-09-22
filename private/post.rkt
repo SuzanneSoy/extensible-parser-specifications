@@ -6,16 +6,11 @@
                      racket/syntax
                      phc-toolkit/untyped)
          "parameters.rkt"
-         "no-order.rkt")
+         "no-order.rkt"
+         "nop.rkt")
 
-(provide ~nop
-         ~post-check
-         ~post-fail
-         ~named-seq)
-
-(define-syntax ~nop
-  (pattern-expander
-   (λ/syntax-case (_) () #'(~do))))
+(provide ~post-check
+         ~post-fail)
 
 (define-eh-mixin-expander ~post-check
   (λ (stx)
@@ -37,22 +32,6 @@
                                 #'(~bind [a (or (attribute clause-present) v)]
                                          ...))
            #'(~and (~bind [clause-present #t]) . pats))])))
-
-(define-eh-mixin-expander ~named-seq
-  (λ (stx)
-    (syntax-case stx ()
-      [(_ id . pats)
-       (identifier? #'id)
-       (let ()
-         (define/with-syntax clause-present (get-new-clause!))
-         (define/with-syntax clause (get-new-clause!))
-         (eh-post-accumulate! '~named-seq
-                              #'(~bind [(id 1) (if (attribute clause-present)
-                                                   (attribute clause)
-                                                   (list))]))
-         #'(~and (~bind [clause-present #t])
-                 (~seq clause (... ...))
-                 (~seq . pats)))])))
 
 (define-for-syntax (post-fail stx)
   (syntax-case stx ()

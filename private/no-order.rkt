@@ -22,6 +22,8 @@
          ;syntax/parse/experimental/eh
          generic-syntax-expanders
          phc-toolkit/untyped
+         racket/list
+         racket/function
          (for-syntax racket/base
                      syntax/parse
                      racket/syntax
@@ -34,11 +36,15 @@
 (provide define-eh-alternative-mixin
          ~seq-no-order
          ~no-order
+         ~before
+         ~after
          ~order-point
          order-point<
          order-point>
          try-order-point<
          try-order-point>
+         ~lift-rest
+         ~omitable-lifted-rest ;; Private
          (expander-out eh-mixin))
 
 (define-expander-type eh-mixin)
@@ -73,74 +79,166 @@
               (record-disappeared-uses dis)
               #'(void))}))
 
+;; TODO: this does not work when there is a pattern expander which expands to
+;; an ~or^eh
+(define-for-syntax (catch-omitable-lifted-rest stx)
+  (define caught '())
+  (define (r stx)
+    ;(displayln (list r stx))
+    (cond
+      [(syntax? stx) (datum->syntax stx (r (syntax-e stx)) stx stx)]
+      [(and (pair? stx)
+            (identifier? (car stx))
+            (free-identifier=? (car stx) #'~or))
+       (cons (car stx) (l (cdr stx)))]
+      [(and (pair? stx)
+            (identifier? (car stx))
+            (free-identifier=? (car stx) #'~omitable-lifted-rest))
+       (set! caught (cons stx caught))
+       #'{~or}] ;; empty ~or with no eh alternatives
+      [else stx]))
+  (define (l stx)
+    ;(displayln (list l stx))
+    (cond
+      [(syntax? stx) (datum->syntax stx (r (syntax-e stx)) stx stx)]
+      [(list? stx) (map r stx)]
+      [(pair? stx) (cons (r (car stx)) (l (cdr stx)))]
+      [else stx]))
+  (define cleaned (r stx))
+  (values cleaned caught))
+
 ;; TODO: ~seq-no-order should also be a eh-mixin-expander, so that when there
 ;; are nested ~seq-no-order, the ~post-fail is caught by the nearest
 ;; ~seq-no-order.
-(define-syntax ~seq-no-order
-  (pattern-expander
-   (λ (stx)
-     (syntax-case stx ()
-       [(self pat ...)
-        (with-disappeared-uses*
-         (define counter 0)
-         (define (increment-counter)
-           (begin0 counter
-                   (set! counter (add1 counter))))
-         ;; post-acc gathers some a-patterns which will be added after the
-         ;; (~seq (~or ) ...)
-         (define post-acc '())
-         (define (add-to-post! v) (set! post-acc (cons v post-acc)))
-         ;; post-groups-acc gathers some attributes that have to be grouped
-         (define post-groups-acc '())
-         (define (add-to-post-groups! . v)
-           (set! post-groups-acc (cons v post-groups-acc)))
-         ;; expand EH alternatives:
-         (parameterize ([eh-post-accumulate add-to-post!]
-                        [eh-post-group add-to-post-groups!]
-                        [clause-counter increment-counter])
-           (define alts
-             (expand-all-eh-mixin-expanders #'(~or pat ...)))
-           (define post-group-bindings
-             (for/list ([group (group-by car
-                                         (reverse post-groups-acc)
-                                         free-identifier=?)])
-               ;; each item in `group` is a four-element list:
-               ;; (list result-id aggregate-function attribute)
-               (define/with-syntax name (first (car group))
-                 #;(syntax-local-introduce
-                    (datum->syntax #'here
-                                   (first (car group)))))
-               (define/with-syntax f (second (car group)))
-               #`[name (f . #,(map (λ (i) #`(attribute #,(third i)))
-                                   group))]))
-           (define/with-syntax whole-clause (get-new-clause!))
-           (define/with-syntax parse-seq-order-sym-id
-             (datum->syntax (parse-seq-order-sym-introducer
-                             (syntax-local-introduce #'here))
-                            'parse-seq-order-sym))
-           #`(~delimit-cut
-              (~and #,(fix-disappeared-uses)
-                    {~seq whole-clause (… …)}
-                    {~do (define parse-seq-order-sym-id
-                           (gensym 'parse-seq-order))}
-                    {~parse ({~seq #,alts (… …)})
-                            #`#,(for/list
-                                    ([xi (in-syntax #'(whole-clause (… …)))]
-                                     [i (in-naturals)])
-                                  ;; Add a syntax property before parsing,
-                                  ;; to track the position of matched elements
-                                  ;; using ~order-point
-                                  (syntax-property xi
-                                                   parse-seq-order-sym-id
-                                                   i))}
-                    ~!
-                    (~bind #,@post-group-bindings)
-                    #,@(reverse post-acc)))))]))))
 
-(define-syntax ~no-order
-  (pattern-expander
-   (λ/syntax-case (_ . rest) ()
-     #'({~seq-no-order . rest}))))
+
+(define-for-syntax ((no-order-ish seq?) stx)
+  (syntax-case stx ()
+    [(self pat ...)
+     (with-disappeared-uses*
+      (define counter 0)
+      (define (increment-counter!)
+        (begin0 counter
+                (set! counter (add1 counter))))
+      ;; pre-acc and post-acc gather some a-patterns which will be added after
+      ;; the (~seq (~or ) ...), before and after the ~! cut respectively
+      (define pre-acc '())
+      (define (add-to-pre! v) (set! pre-acc (cons v pre-acc)))
+      (define post-acc '())
+      (define (add-to-post! v) (set! post-acc (cons v post-acc)))
+      ;; post-groups-acc gathers some attributes that have to be grouped
+      (define post-groups-acc '())
+      (define (add-to-post-groups! . v)
+        (set! post-groups-acc (cons v post-groups-acc)))
+      (define lifted-rest '())
+      (define (add-to-lift-rest! present-clause expanded-pat)
+        (define succeeded-clause (get-new-clause!))
+        (set! lifted-rest (cons (list present-clause
+                                      expanded-pat
+                                      succeeded-clause)
+                                lifted-rest)))
+      ;; expand EH alternatives:
+      (parameterize ([eh-pre-accumulate add-to-post!]
+                     [eh-post-group add-to-post-groups!]
+                     [eh-post-accumulate add-to-post!]
+                     [clause-counter increment-counter!]
+                     [lift-rest add-to-lift-rest!])
+        (define alts
+          (expand-all-eh-mixin-expanders #'(~or pat ...)))
+        ;; NOTE: this works only because eh-mixin-expanders are NOT pattern
+        ;; expanders. If these are merged later on, then this needs to be
+        ;; adjusted
+        (define-values (cleaned-alts caught-omitable-lifted-rest)
+          (catch-omitable-lifted-rest alts))
+        (define post-group-bindings
+          (for/list ([group (group-by car
+                                      (reverse post-groups-acc)
+                                      free-identifier=?)])
+            ;; each item in `group` is a four-element list:
+            ;; (list result-id aggregate-function attribute)
+            (define/with-syntax name (first (car group))
+              #;(syntax-local-introduce
+                 (datum->syntax #'here
+                                (first (car group)))))
+            (define/with-syntax f (second (car group)))
+            #`[name (f . #,(map (λ (i) #`(attribute #,(third i)))
+                                group))]))
+        (set! lifted-rest (reverse lifted-rest))
+        (define/with-syntax whole-clause (get-new-clause!))
+        (define/with-syntax rest-clause (get-new-clause!))
+        (define/with-syntax parse-seq-order-sym-id
+          (datum->syntax (parse-seq-order-sym-introducer
+                          (syntax-local-introduce #'here))
+                         'parse-seq-order-sym))
+        (define/with-syntax whole-clause-pat
+          (if seq?
+              (begin
+                (when (not (null? lifted-rest))
+                  (raise-syntax-error
+                   '~seq-no-order
+                   (string-append "rest clause must be used within ~no-order,"
+                                  " but was used within ~seq-no-order")
+                   stx))
+                #'{~seq whole-clause (… …) {~bind [(rest-clause 1) (list)]}})
+              #'(whole-clause (… …) . {~and rest-clause {~not (_ . _)}})))
+        (define rest-handlers
+          (if (null? lifted-rest)
+              #'()
+              (map (match-lambda
+                     [(list present expanded-pat succeeded)
+                      #`{~parse {~or {~and {~parse
+                                            #t
+                                            (ormap identity
+                                                   (flatten
+                                                    (attribute #,present)))}
+                                           #,expanded-pat
+                                           {~bind [#,succeeded #t]}}
+                                     _}
+                                #'rest-clause}])
+                   lifted-rest)))
+        (define check-at-least-one-rest-handler
+          (if (null? lifted-rest)
+              #'()
+              (with-syntax ([([_ _ succeeded] …) lifted-rest])
+                #'({~fail #:unless (or (attribute succeeded) …)
+                          "expected one of the rest patterns to match"}))))
+        (define check-no-dup-rest-handlers
+          (if (null? lifted-rest)
+              #'()
+              (with-syntax ([([_ _ succeeded] …) lifted-rest])
+                #'({~fail #:when (> (length
+                                     (filter (λ (x) x)
+                                             (list (attribute succeeded) …)))
+                                    1)
+                          (string-append "more than one of the lifted rest"
+                                         " patterns matched")}))))
+        ((λ (x) #;(pretty-write (syntax->datum x)) x)
+         #`(~delimit-cut
+            (~and #,(fix-disappeared-uses)
+                  whole-clause-pat
+                  {~do (define parse-seq-order-sym-id
+                         (gensym 'parse-seq-order))}
+                  {~parse ({~seq #,cleaned-alts (… …)})
+                          #`#,(for/list
+                                  ([xi (in-syntax #'(whole-clause (… …)))]
+                                   [i (in-naturals)])
+                                ;; Add a syntax property before parsing,
+                                ;; to track the position of matched elements
+                                ;; using ~order-point
+                                (syntax-property xi
+                                                 parse-seq-order-sym-id
+                                                 i))}
+                  #,@(reverse pre-acc)
+                  #,@caught-omitable-lifted-rest
+                  #,@rest-handlers
+                  #,@check-at-least-one-rest-handler
+                  ~!
+                  #,@check-no-dup-rest-handlers
+                  (~bind #,@post-group-bindings)
+                  #,@(reverse post-acc))))))]))
+
+(define-syntax ~seq-no-order (pattern-expander (no-order-ish #t)))
+(define-syntax ~no-order (pattern-expander (no-order-ish #f)))
 
 (define-eh-mixin-expander ~order-point
   (λ (stx)
@@ -169,3 +267,66 @@
 
 (define-syntax-rule (try-order-point> a b)
   (if-attribute a (if-attribute b (order-point> a b) #f) #f))
+
+(define-eh-mixin-expander ~before
+  (λ (stx)
+    (syntax-case stx ()
+      [(_ other message pat …)
+       (and (identifier? #'other)
+            (string? (syntax-e #'message))
+            #'{~order-point pt
+                {~seq pat …}
+                {~post-fail message #:when (order-point> pt other)}})])))
+
+(define-eh-mixin-expander ~after
+  (λ (stx)
+    (syntax-case stx ()
+      [(_ other message pat …)
+       (and (identifier? #'other)
+            (string? (syntax-e #'message))
+            #'{~order-point pt
+                {~seq pat …}
+                {~post-fail message #:when (order-point< pt other)}})])))
+
+(define-eh-mixin-expander ~try-before
+  (λ (stx)
+    (syntax-case stx ()
+      [(_ other message pat …)
+       (and (identifier? #'other)
+            (string? (syntax-e #'message))
+            #'{~order-point pt
+                {~seq pat …}
+                {~post-fail message #:when (try-order-point> pt other)}})])))
+
+(define-eh-mixin-expander ~try-after
+  (λ (stx)
+    (syntax-case stx ()
+      [(_ other message pat …)
+       (and (identifier? #'other)
+            (string? (syntax-e #'message))
+            #'{~order-point pt
+                {~seq pat …}
+                {~post-fail message #:when (try-order-point< pt other)}})])))
+
+(define-syntax ~omitable-lifted-rest
+  (pattern-expander
+   (λ (stx)
+     (syntax-case stx ()
+       [(_ expanded-pats clause-present)
+        #'{~and
+           ;; TODO: copy the disappeared uses instead of this hack
+           {~do 'expanded-pats}
+           {~bind [clause-present #t]}}]))))
+     
+
+(define-eh-mixin-expander ~lift-rest
+  (λ (stx)
+    (syntax-case stx ()
+      [(_ pat)
+       (let ()
+         (define/with-syntax clause-present (get-new-clause!))
+         (define/with-syntax expanded-pat
+           ;; let the ~post, ~global etc. within pat … be recognized
+           (expand-all-eh-mixin-expanders #'pat))
+         (lift-rest! '~lift-rest #'clause-present #'expanded-pat)
+         #'(~omitable-lifted-rest expanded-pat clause-present))])))

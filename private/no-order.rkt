@@ -36,8 +36,6 @@
 (provide define-eh-alternative-mixin
          ~seq-no-order
          ~no-order
-         ~before
-         ~after
          ~order-point
          order-point<
          order-point>
@@ -274,46 +272,6 @@
 (define-syntax-rule (try-order-point> a b)
   (if-attribute a (if-attribute b (order-point> a b) #f) #f))
 
-(define-eh-mixin-expander ~before
-  (λ (stx)
-    (syntax-case stx ()
-      [(_ other message pat …)
-       (and (identifier? #'other)
-            (string? (syntax-e #'message)))
-       #'{~order-point pt
-           {~seq pat …}
-           {~pre-fail message #:when (order-point> pt other)}}])))
-
-(define-eh-mixin-expander ~after
-  (λ (stx)
-    (syntax-case stx ()
-      [(_ other message pat …)
-       (and (identifier? #'other)
-            (string? (syntax-e #'message)))
-       #'{~order-point pt
-           {~seq pat …}
-           {~pre-fail message #:when (order-point< pt other)}}])))
-
-(define-eh-mixin-expander ~try-before
-  (λ (stx)
-    (syntax-case stx ()
-      [(_ other message pat …)
-       (and (identifier? #'other)
-            (string? (syntax-e #'message)))
-       #'{~order-point pt
-           {~seq pat …}
-           {~pre-fail message #:when (try-order-point> pt other)}}])))
-
-(define-eh-mixin-expander ~try-after
-  (λ (stx)
-    (syntax-case stx ()
-      [(_ other message pat …)
-       (and (identifier? #'other)
-            (string? (syntax-e #'message)))
-       #'{~order-point pt
-           {~seq pat …}
-           {~pre-fail message #:when (try-order-point< pt other)}}])))
-
 (define-syntax ~omitable-lifted-rest
   (pattern-expander
    (λ (stx)
@@ -323,7 +281,6 @@
            ;; TODO: copy the disappeared uses instead of this hack
            {~do 'expanded-pats}
            {~bind [clause-present #t]}}]))))
-     
 
 (define-eh-mixin-expander ~lift-rest
   (λ (stx)

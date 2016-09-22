@@ -3,6 +3,7 @@
 (require generic-syntax-expanders
          "private/parameters.rkt"
          "private/no-order.rkt"
+         "private/before-after.rkt"
          "private/pre.rkt"
          "private/post.rkt"
          "private/global.rkt"
@@ -30,6 +31,8 @@
          try-order-point>
          ~before
          ~after
+         ~try-before
+         ~try-after
          ~lift-rest
          ~mixin
          ~post-check

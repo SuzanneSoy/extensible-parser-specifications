@@ -216,7 +216,7 @@
                                     1)
                           (string-append "more than one of the lifted rest"
                                          " patterns matched")}))))
-        ((λ (x) (pretty-write (syntax->datum x)) x)
+        ((λ (x) #;(pretty-write (syntax->datum x)) x)
          #`(~delimit-cut
             (~and #,(fix-disappeared-uses)
                   whole-clause-pat

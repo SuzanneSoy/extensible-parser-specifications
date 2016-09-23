@@ -6,6 +6,26 @@
 extensible-parser-specifications
 ================================
 
+
+Caveat: the mixins defined with `define-eh-alternative-mixin` cannot be
+provided and used in a separate module. Unfortunately, I cannot think of an
+acceptable fix for this problem, as solving this would require extracting
+parts of the mixin while preserving the bindings of some identifiers, but
+altering the bindings of others. This means that for the foreseeable future,
+once a mixin is defined, can only be used via `~mixin` (or by directly
+invoking it) within the same module.
+
+The regular and splicing syntax classes defined with `#:define-syntax-class`
+and `#:define-splicing-syntax-class` will work fine across module boundaries,
+however. Manually defined syntax classes, splicing syntax classes or
+ellipsis-head syntax classes will also work fine across module boundaries,
+even if they contain uses of `~no-order` and `~seq-no-order`, and even if
+those special forms contain uses of mixins defined within the same module. In
+other words, as long as a definition of a mixin and all its uses via `~mixin`
+are within the same module, everything else should work without surprises.
+
+----------
+
 Like https://github.com/AlexKnauth/seq-no-order, but provides global
 constraints.  AlexKnauth's implementation allows dotted "rest" pattern which
 this implementation does not support.

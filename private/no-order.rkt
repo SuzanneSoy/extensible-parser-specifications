@@ -149,6 +149,11 @@
                      [lift-rest add-to-lift-rest!])
         (define alts
           (expand-all-eh-mixin-expanders #'(~or pat ...)))
+        ;; TODO: we can probably close the "parameterize" here.
+
+
+
+        
         ;; NOTE: this works only because eh-mixin-expanders are NOT pattern
         ;; expanders. If these are merged later on, then this needs to be
         ;; adjusted

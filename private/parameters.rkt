@@ -2,7 +2,9 @@
 
 (require (for-syntax racket/base))
 
-(provide (for-syntax eh-pre-accumulate
+(provide (for-syntax eh-first-accumulate
+                     eh-first-accumulate!
+                     eh-pre-accumulate
                      eh-pre-accumulate!
                      eh-post-accumulate
                      eh-post-accumulate!
@@ -24,6 +26,7 @@
                                            " used outside of ~seq-no-order")))
       (apply (parameter-name) args))))
 
+(define-dynamic-accumulator-parameter eh-first-accumulate eh-first-accumulate!)
 (define-dynamic-accumulator-parameter eh-pre-accumulate eh-pre-accumulate!)
 (define-dynamic-accumulator-parameter eh-post-group eh-post-group!)
 (define-dynamic-accumulator-parameter eh-post-accumulate eh-post-accumulate!)

@@ -43,7 +43,7 @@
          try-order-point>
          ~lift-rest
          ~omitable-lifted-rest ;; Private
-         (expander-out eh-mixin))
+         (expander-out eh-mixin)) ;; Private
 
 (define-expander-type eh-mixin)
 
@@ -124,8 +124,10 @@
       (define (increment-counter!)
         (begin0 counter
                 (set! counter (add1 counter))))
-      ;; pre-acc and post-acc gather some a-patterns which will be added after
+      ;; first, pre and post-acc gather a-patterns which will be added after
       ;; the (~seq (~or ) ...), before and after the ~! cut respectively
+      (define first-acc '())
+      (define (add-to-first! v) (set! first-acc (cons v first-acc)))
       (define pre-acc '())
       (define (add-to-pre! v) (set! pre-acc (cons v pre-acc)))
       (define post-acc '())
@@ -142,7 +144,8 @@
                                       succeeded-clause)
                                 lifted-rest)))
       ;; expand EH alternatives:
-      (parameterize ([eh-pre-accumulate add-to-post!]
+      (parameterize ([eh-first-accumulate add-to-first!]
+                     [eh-pre-accumulate add-to-pre!]
                      [eh-post-group add-to-post-groups!]
                      [eh-post-accumulate add-to-post!]
                      [clause-counter increment-counter!]
@@ -221,7 +224,7 @@
                                     1)
                           (string-append "more than one of the lifted rest"
                                          " patterns matched")}))))
-        ((λ (x) #;(pretty-write (syntax->datum x)) x)
+        ((λ (x) #;(pretty-write (syntax->datum #`(syntax-parser [#,x 'ok]))) x)
          #`(~delimit-cut
             (~and #,(fix-disappeared-uses)
                   whole-clause-pat
@@ -237,6 +240,7 @@
                                 (syntax-property xi
                                                  parse-seq-order-sym-id
                                                  i))}
+                  #,@(reverse first-acc)
                   #,@(reverse pre-acc)
                   #,@caught-omitable-lifted-rest
                   #,@rest-handlers

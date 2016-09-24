@@ -24,6 +24,7 @@
          phc-toolkit/untyped
          racket/list
          racket/function
+         racket/format
          (for-syntax racket/base
                      syntax/parse
                      racket/syntax
@@ -138,10 +139,10 @@
         (set! post-groups-acc (cons v post-groups-acc)))
       (define lifted-rest '())
       (define (add-to-lift-rest! present-clause expanded-pat)
-        (define succeeded-clause (get-new-clause!))
+        (define succeeded (get-new-clause!))
         (set! lifted-rest (cons (list present-clause
                                       expanded-pat
-                                      succeeded-clause)
+                                      succeeded)
                                 lifted-rest)))
       ;; expand EH alternatives:
       (parameterize ([eh-first-accumulate add-to-first!]
@@ -196,34 +197,32 @@
         (define rest-handlers
           (if (null? lifted-rest)
               #'()
-              (map (match-lambda
-                     [(list present expanded-pat succeeded)
-                      #`{~parse {~or {~and {~parse
-                                            #t
-                                            (ormap identity
-                                                   (flatten
-                                                    (attribute #,present)))}
-                                           #,expanded-pat
-                                           {~bind [#,succeeded #t]}}
-                                     _}
-                                #'rest-clause}])
-                   lifted-rest)))
-        (define check-at-least-one-rest-handler
-          (if (null? lifted-rest)
-              #'()
-              (with-syntax ([([_ _ succeeded] …) lifted-rest])
-                #'({~fail #:unless (or (attribute succeeded) …)
-                          "expected one of the rest patterns to match"}))))
+              (with-syntax ([[(present expanded-pat succeeded) …] lifted-rest])
+                #'({~parse
+                    {~or (_ {~parse #t
+                                    (ormap identity
+                                           (flatten (attribute present)))}
+                            {~parse expanded-pat
+                                    #'rest-clause}
+                            {~bind [succeeded #t]})
+                         …
+                         (_ {~fail (~a "expected one of the rest patterns"
+                                       " to match")})}
+                    #'(dummy)}))))
         (define check-no-dup-rest-handlers
           (if (null? lifted-rest)
               #'()
-              (with-syntax ([([_ _ succeeded] …) lifted-rest])
-                #'({~fail #:when (> (length
-                                     (filter (λ (x) x)
-                                             (list (attribute succeeded) …)))
-                                    1)
-                          (string-append "more than one of the lifted rest"
-                                         " patterns matched")}))))
+              (with-syntax ([([present expanded-pat succeeded] …) lifted-rest])
+                #'({~fail #:when (or (and (not (attribute succeeded))
+                                          (ormap identity
+                                                 (flatten (attribute present)))
+                                          (syntax-parse #'rest-clause
+                                            [expanded-pat #t]
+                                            [_ #f]))
+                                     …)
+                          (~a "more than one of the lifted rest patterns"
+                              " matched")}))))
+
         ((λ (x) #;(pretty-write (syntax->datum #`(syntax-parser [#,x 'ok]))) x)
          #`(~delimit-cut
             (~and #,(fix-disappeared-uses)
@@ -244,7 +243,6 @@
                   #,@(reverse pre-acc)
                   #,@caught-omitable-lifted-rest
                   #,@rest-handlers
-                  #,@check-at-least-one-rest-handler
                   ~!
                   #,@check-no-dup-rest-handlers
                   (~bind #,@post-group-bindings)

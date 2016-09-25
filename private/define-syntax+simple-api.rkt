@@ -1,7 +1,7 @@
 #lang racket/base
 
 (provide define-syntax/parse+simple
-         (for-syntax define/syntax-parse+simple))
+ (for-syntax define/syntax-parse+simple))
 
 (require phc-toolkit/untyped
          syntax/parse/define
@@ -16,10 +16,11 @@
          (for-meta 2 racket/list)
          (for-meta 2 racket/syntax)
          (for-meta 2 syntax/parse)
+         (for-meta 2 syntax/parse/experimental/template)
          (for-meta 2 phc-toolkit/untyped))
 
 (define-syntax/parse (define-syntax/parse+simple
-                       [name . args] . body)
+                         [name . args] . body)
   (with-format-ids/inject-binders
    ([name-forward #'name "~a-forward-attributes" #'name]
     [tmp-forward  #'tmp  "~a-forward-attributes" #'tmp])
@@ -34,21 +35,26 @@
   (define-syntax (define/syntax-parse+simple stx)
     (syntax-parse stx
       [(_ (name:name-or-curry . args)
-          (~optional (~seq #:define-splicing-syntax-class define-class-name:id))
+          (~optional (~seq #:define-splicing-syntax-class define-splicing:id))
+          (~optional (~seq #:define-syntax-class define-class:id))
           . body)
        (let ()
          (define introducer (make-syntax-introducer))
          (define/with-syntax args-stxclass
-           (or (attribute define-class-name)
+           (or (attribute define-class)
                (introducer (datum->syntax #'args 'args-stxclass) 'add)))
          (define/with-syntax body-introduced
            (introducer #'body 'add))
-         #'(begin
-             (define-splicing-syntax-class args-stxclass
-               #:auto-nested-attributes
-               (pattern (~seq . args)))
-             (define/syntax-parse+simple/stxclass [name args-stxclass]
-               . body-introduced)))]))
+         (template
+          (begin
+            (?? (define-splicing-syntax-class define-splicing
+                  #:auto-nested-attributes
+                  (pattern {~seq . args})))
+            (define-syntax-class args-stxclass
+              #:auto-nested-attributes
+              (pattern args))
+            (define/syntax-parse+simple/stxclass [name . args-stxclass]
+              . body-introduced))))]))
 
   (define-for-syntax (change-name-or-curry stx new-name)
     (if (identifier? stx)
@@ -63,7 +69,7 @@
   (define-syntax define/syntax-parse+simple/stxclass
     (syntax-parser-with-arrows
      [(_ [name:name-or-curry
-          (~var cls (static syntax/parse:stxclass? "a syntax class"))]
+          . (~var cls (static syntax/parse:stxclass? "a syntax class"))]
          . body)
       #:with colon-stxclass (format-id #'cls ":~a" #'cls)
       #:with name-forward (format-id/record #'name.id
@@ -88,7 +94,7 @@
             (with-arrows
              (syntax-parameterize ([stx (make-rename-transformer #'stx2)])
                (syntax-parse stx2
-                 [(_ colon-stxclass) . body]))))
+                 [(_ . colon-stxclass) . body]))))
           (define def-private-simple-api
             (syntax-parameterize ([stx (make-rename-transformer #'stx/arg)])
               (syntax-parse #'nothing

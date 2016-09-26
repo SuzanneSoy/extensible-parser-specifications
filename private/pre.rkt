@@ -73,6 +73,8 @@
            (expand-all-eh-mixin-expanders #'(pat …)))
          (eh-first-accumulate! '~maybe/empty
                                #'(~parse (expanded-pat …)
-                                         #'(clause (... ...))))
+                                         (if (attribute clause)
+                                             #'(clause (... ...))
+                                             #'())))
          #'{~optional {~and {~bind [clause-present #t]}
                             {~seq clause (... ...)}}})])))

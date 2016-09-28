@@ -43,6 +43,7 @@
          try-order-point<
          try-order-point>
          ~lift-rest
+         ~as-rest
          ~omitable-lifted-rest ;; Private
          (expander-out eh-mixin)) ;; Private
 
@@ -292,6 +293,23 @@
            ;; TODO: copy the disappeared uses instead of this hack
            {~do 'expanded-pats}
            {~bind [clause-present #t]}}]))))
+
+(define-eh-mixin-expander ~as-rest
+  (λ (stx)
+    (syntax-case stx ()
+      [(_ pat ...)
+       (let ()
+         (define/with-syntax clause-present (get-new-clause!))
+         (define/with-syntax clause-seq (get-new-clause!))
+         (define/with-syntax (expanded-pat ...)
+           ;; let the ~post, ~global etc. within pat … be recognized
+           (stx-map expand-all-eh-mixin-expanders #'(pat ...)))
+         (lift-rest! '~lift-rest
+                     #'clause-present
+                     #'({~parse (expanded-pat ...)
+                                #'(clause-seq (... ...))}))
+         #'{~seq clause-seq (... ...)
+                 {~bind [clause-present #t]}})])))
 
 (define-eh-mixin-expander ~lift-rest
   (λ (stx)

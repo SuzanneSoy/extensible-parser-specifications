@@ -34,6 +34,7 @@
          ~try-before
          ~try-after
          ~lift-rest
+         ~as-rest
          ~mixin
          ~post-check
          ~post-fail

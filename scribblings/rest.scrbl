@@ -12,7 +12,6 @@
 
 @defform[#:kind "eh-mixin expander"
          {~lift-rest pat}]{
-                           
  Lifts @racket[pat] out of the current mixin, so that it is used as a pattern to
  match the tail of the improper list being matched. It is subject to the
  following restrictions:
@@ -65,3 +64,26 @@
  @item{Post and global operations can be used within the @racket[pat]. This
    combination of features is not thoroughly tested, however. Please report any
    issues you run into.}]}
+
+@defform[#:kind "eh-mixin expander"
+         {~as-rest pat ...}]{
+                             
+ Like @racket[~seq], but the @racket[pat]s are injected as part of the same
+ @racket[~or] as @racket[~lift-rest]. This means that syntax/parse will not
+ throw an error for the following code:
+
+ @examples[#:eval (make-evaluator)
+           (eval:no-prompt
+            (define p2
+              (syntax-parser
+                [(~no-order {~once name:id}
+                            {~once message:str}
+                            (~once (~or {~as-rest val:nat}
+                                        {~seq {~lift-rest val:nat}})))
+                 (syntax->datum
+                  #'(#:name name #:messsage message #:val val))])))
+           (code:line (p2 #'(x 123 "msg"))       (code:comment "matched by ~as-rest"))
+           (code:line (p2 #'(x "msg" 123))       (code:comment "matched by ~as-rest"))
+           (code:line (p2 #'(x "msg" . 456))     (code:comment "matched by ~lift-rest"))
+           (eval:alts (code:line (p2 #'(x "msg" 123 . 456)) (code:comment "can't have both"))
+                      (eval:error (p2 #'(x "msg" 123 . 456))))]}

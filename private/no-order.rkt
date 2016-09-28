@@ -260,10 +260,14 @@
                      'parse-seq-order-sym))
     (syntax-case stx ()
       [(_ point-name pat …)
-       #'(~and (~seq clause-point _ (… …))
-               (~bind [point-name (syntax-property #'clause-point
-                                                   parse-seq-order-sym-id)])
-               {~seq pat …})])))
+       #'{~and {~seq pat …}
+               {~either {~and {~seq clause-point _ (… …)}
+                              {~bind
+                               [point-name
+                                (syntax-property #'clause-point
+                                                 parse-seq-order-sym-id)]}}
+                        {~and {~seq}
+                              {~bind [point-name #f]}}}}])))
 
 (define-syntax-rule (order-point< a b)
   (and (attribute a) (attribute b)

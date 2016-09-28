@@ -12,31 +12,31 @@
                      racket/format))
 
 (check-equal? (syntax-parse #'()
-   [{~no-order (~maybe/empty {~seq τᵢ ... {~lift-rest τ-rest}})}
-    (syntax->datum #'(#:rest τ-rest #:τᵢ τᵢ …))])
- '(#:rest () #:τᵢ))
+                [{~no-order (~maybe/empty {~seq τᵢ ... {~lift-rest τ-rest}})}
+                 (syntax->datum #'(#:rest τ-rest #:τᵢ τᵢ …))])
+              '(#:rest () #:τᵢ))
 
 (check-equal? (syntax-parse #'a
                  [{~no-order (~maybe/empty {~seq τᵢ ... {~lift-rest τ-rest}})}
-                  (syntax->datum #'(τ-rest τᵢ …))])
+                  (syntax->datum #'(#:rest τ-rest #:τᵢ τᵢ …))])
               '(#:rest a #:τᵢ))
 
 (check-equal? (syntax-parse #'(a)
                  [{~no-order (~maybe/empty {~seq τᵢ ... {~lift-rest τ-rest}})}
-                  (syntax->datum #'(τ-rest τᵢ …))])
+                  (syntax->datum #'(#:rest τ-rest #:τᵢ τᵢ …))])
               '(#:rest () #:τᵢ a))
 
 (check-equal? (syntax-parse #'(a . b)
                  [{~no-order (~maybe/empty {~seq τᵢ ... {~lift-rest τ-rest}})}
-                  (syntax->datum #'(τ-rest τᵢ …))])
+                  (syntax->datum #'(#:rest τ-rest #:τᵢ τᵢ …))])
               '(#:rest b #:τᵢ a))
 
 (check-equal? (syntax-parse #'(a b)
                  [{~no-order (~maybe/empty {~seq τᵢ ... {~lift-rest τ-rest}})}
-                  (syntax->datum #'(τ-rest τᵢ …))])
+                  (syntax->datum #'(#:rest τ-rest #:τᵢ τᵢ …))])
               '(#:rest () #:τᵢ a b))
 
 (check-equal? (syntax-parse #'(a b . c)
                  [{~no-order (~maybe/empty {~seq τᵢ ... {~lift-rest τ-rest}})}
-                  (syntax->datum #'(τ-rest τᵢ …))])
+                  (syntax->datum #'(#:rest τ-rest #:τᵢ τᵢ …))])
               '(#:rest c #:τᵢ a b))

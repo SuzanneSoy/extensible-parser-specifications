@@ -63,18 +63,19 @@
 
 ;; TODO: fixme: should happen before the other pre operations
 (define-eh-mixin-expander ~maybe/empty
-  (λ (stx)
-    (syntax-case stx ()
-      [(_ pat …)
-       (let ()
-         (define/with-syntax clause-present (get-new-clause!))
-         (define/with-syntax (expanded-pat …)
-           ;; let the ~post, ~global etc. within pat … be recognized
-           (expand-all-eh-mixin-expanders #'(pat …)))
-         (eh-first-accumulate! '~maybe/empty
-                               #'(~parse (expanded-pat …)
-                                         (if (attribute clause)
-                                             #'(clause (... ...))
-                                             #'())))
-         #'{~optional {~and {~bind [clause-present #t]}
-                            {~seq clause (... ...)}}})])))
+  (syntax-parser
+    [(_ {~and pat {~not #:name}} …
+        {~optional {~seq #:name name}})
+     (let ()
+       (define/with-syntax clause-present (get-new-clause!))
+       (define/with-syntax (expanded-pat …)
+         ;; let the ~post, ~global etc. within pat … be recognized
+         (expand-all-eh-mixin-expanders #'(pat …)))
+       (eh-first-accumulate! '~maybe/empty
+                             #'(~parse (expanded-pat …)
+                                       (if (attribute clause)
+                                           #'(clause (... ...))
+                                           #'())))
+       #`{~optional {~and {~bind [clause-present #t]}
+                          {~seq clause (... ...)}}
+                    #,@(when-attr name #'(#:name name))})]))

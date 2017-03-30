@@ -1,7 +1,8 @@
 [![Build Status,](https://img.shields.io/travis/jsmaniac/extensible-parser-specifications/master.svg)](https://travis-ci.org/jsmaniac/extensible-parser-specifications)
 [![Coverage Status,](https://img.shields.io/coveralls/jsmaniac/extensible-parser-specifications/master.svg)](https://coveralls.io/github/jsmaniac/extensible-parser-specifications)
 [![Build Stats,](https://img.shields.io/badge/build-stats-blue.svg)](http://jsmaniac.github.io/travis-stats/#jsmaniac/extensible-parser-specifications)
-[![Online Documentation.](https://img.shields.io/badge/docs-online-blue.svg)](http://docs.racket-lang.org/extensible-parser-specifications/)
+[![Online Documentation](https://img.shields.io/badge/docs-online-blue.svg)](http://docs.racket-lang.org/extensible-parser-specifications/)
+[![License: CC0 v1.0.](https://img.shields.io/badge/license-CC0-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
 
 extensible-parser-specifications
 ================================

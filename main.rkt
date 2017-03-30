@@ -14,8 +14,8 @@
          (for-template "private/define-syntax+simple-api.rkt")
          syntax/parse)
 
-;; from syntax/parse, so that define-eh-alternative-mixin can recognize uses of
-;; (pattern …)
+;; re-provide pattern as provided by syntax/parse, so that
+;; define-eh-alternative-mixin can recognize uses of (pattern …)
 (provide pattern)
 
 (provide #;define-splicing-syntax-class-with-eh-mixins

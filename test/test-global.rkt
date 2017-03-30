@@ -61,7 +61,7 @@
     (attribute kw-not-number)])
  #t)
 
-;; former tests from the documentation:
+;; former tests present in the documentation:
 
 (check-equal?
  (syntax-parse #'(1 ya (2 #f 3) 4 yb (5 #f 6) yc 7)

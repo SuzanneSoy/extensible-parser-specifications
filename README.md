@@ -2,7 +2,7 @@
 [![Coverage Status,](https://img.shields.io/codecov/c/github/jsmaniac/extensible-parser-specifications/master.svg)](https://codecov.io/gh/jsmaniac/extensible-parser-specifications)
 [![Build Stats,](https://img.shields.io/badge/build-stats-blue.svg)](http://jsmaniac.github.io/travis-stats/#jsmaniac/extensible-parser-specifications)
 [![Online Documentation,](https://img.shields.io/badge/docs-online-blue.svg)](http://docs.racket-lang.org/extensible-parser-specifications/)
-[![Unmaintained as of 2017 because syntax-parse is ill-fitted for this use,](https://img.shields.io/maintenance/no (syntax-parse is ill-fitted for this use)/2017.svg)](https://github.com/jsmaniac/extensible-parser-specifications/issues)
+[![Unmaintained as of 2017 because syntax-parse is ill-fitted for this use,](https://img.shields.io/badge/maintained-no%20as%20of%202017%20%28syntax--parse%20is%20ill--fitted%20for%20this%20use%29-red.svg)](https://github.com/jsmaniac/extensible-parser-specifications/issues)
 [![License: CC0 v1.0.](https://img.shields.io/badge/license-CC0-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
 
 extensible-parser-specifications

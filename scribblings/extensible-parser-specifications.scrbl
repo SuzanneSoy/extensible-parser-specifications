@@ -9,7 +9,7 @@
                     (only-in racket/base [... …])]]
 
 @title{extensible-parser-specifications}
-@author{@author+email["Georges Dupéron" "georges.duperon@gmail.com"]}
+@author{@author+email["Suzanne Soy" "racket@suzanne.soy"]}
 
 Caveat: the mixins defined with @racket[define-eh-alternative-mixin] cannot be
 provided and used in a separate module. Unfortunately, I cannot think of an

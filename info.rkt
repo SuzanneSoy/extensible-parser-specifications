@@ -12,4 +12,4 @@
 (define pkg-desc (string-append "Composable no-order syntax/parse"
                                 " specifications, with global constraints"))
 (define version "0.1")
-(define pkg-authors '(|Georges Dupéron|))
+(define pkg-authors '(|Suzanne Soy|))

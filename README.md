@@ -1,5 +1,5 @@
-[![Build Status,](https://img.shields.io/travis/jsmaniac/extensible-parser-specifications/master.svg)](https://travis-ci.org/jsmaniac/extensible-parser-specifications)
-[![Coverage Status,](https://img.shields.io/codecov/c/github/jsmaniac/extensible-parser-specifications/master.svg)](https://codecov.io/gh/jsmaniac/extensible-parser-specifications)
+[![Build Status,](https://img.shields.io/travis/jsmaniac/extensible-parser-specifications/main.svg)](https://travis-ci.org/jsmaniac/extensible-parser-specifications)
+[![Coverage Status,](https://img.shields.io/codecov/c/github/jsmaniac/extensible-parser-specifications/main.svg)](https://codecov.io/gh/jsmaniac/extensible-parser-specifications)
 [![Build Stats,](https://img.shields.io/badge/build-stats-blue.svg)](http://jsmaniac.github.io/travis-stats/#jsmaniac/extensible-parser-specifications)
 [![Online Documentation,](https://img.shields.io/badge/docs-online-blue.svg)](http://docs.racket-lang.org/extensible-parser-specifications/)
 [![Unmaintained as of 2017 because syntax-parse is ill-fitted for this use,](https://img.shields.io/badge/maintained-no%20as%20of%202017%20%28syntax--parse%20is%20ill--fitted%20for%20this%20use%29-red.svg)](https://github.com/jsmaniac/extensible-parser-specifications/issues)
